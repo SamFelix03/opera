@@ -1,0 +1,352 @@
+{
+  "title": "Opera Protocol — PRD §8 Solar Farm Audit Pack",
+  "generatedAt": "2026-08-07T13:38:10.627Z",
+  "runId": "a5bbd45c-e823-4940-bf6a-889a1af18079",
+  "asset": {
+    "name": "Malaysia Solar Farm",
+    "revenueMonthlyMyr": 180000,
+    "assetId": 1,
+    "energyLorId": 1,
+    "maintLorId": 2,
+    "energyMandateId": 1,
+    "maintMandateId": 2
+  },
+  "roles": [
+    {
+      "role": "energyOp",
+      "address": "0xc3da0001f0023702fc7cdea9f3607522d6099b5b",
+      "customerId": "OPRENERA5BBD45CXX",
+      "cvRecordId": "mock-cv-energyOp"
+    },
+    {
+      "role": "investor",
+      "address": "0xdf2b2d30f6ee44d157412270f9f55f0f27abeadc",
+      "customerId": "OPRINVEA5BBD45CXX",
+      "cvRecordId": "mock-cv-investor"
+    },
+    {
+      "role": "maintOp",
+      "address": "0x27bc8ffda235baa9622596a88a6d32d9266cfa37",
+      "customerId": "OPRMAINA5BBD45CXX",
+      "cvRecordId": "mock-cv-maintOp"
+    },
+    {
+      "role": "owner",
+      "address": "0xe2d647cd8a21cdb17b02bc696879c218b7a4957d",
+      "customerId": "OPROWNEA5BBD45CXX",
+      "cvRecordId": "mock-cv-owner"
+    },
+    {
+      "role": "regulator",
+      "address": "0xa1013a5ff3f66be143e31afb687ba7fbfea28cb4",
+      "customerId": "OPRREGUA5BBD45CXX",
+      "cvRecordId": "mock-cv-regulator"
+    },
+    {
+      "role": "replacement",
+      "address": "0xde46a7b415e299212ee8bd953d400eb0ef676dc5",
+      "customerId": "OPRREPLA5BBD45CXX",
+      "cvRecordId": "mock-cv-replacement"
+    }
+  ],
+  "steps": [
+    {
+      "step": "setupIdentities",
+      "status": "done",
+      "error": null,
+      "startedAt": "2026-08-07 13:38:10",
+      "finishedAt": "2026-08-07 13:38:10"
+    },
+    {
+      "step": "setupAsset",
+      "status": "done",
+      "error": null,
+      "startedAt": "2026-08-07 13:38:10",
+      "finishedAt": "2026-08-07 13:38:10"
+    },
+    {
+      "step": "fundAndStake",
+      "status": "done",
+      "error": null,
+      "startedAt": "2026-08-07 13:38:10",
+      "finishedAt": "2026-08-07 13:38:10"
+    },
+    {
+      "step": "normalOps",
+      "status": "done",
+      "error": null,
+      "startedAt": "2026-08-07 13:38:10",
+      "finishedAt": "2026-08-07 13:38:10"
+    },
+    {
+      "step": "sanctionsEvent",
+      "status": "done",
+      "error": null,
+      "startedAt": "2026-08-07 13:38:10",
+      "finishedAt": "2026-08-07 13:38:10"
+    },
+    {
+      "step": "replacementAcquire",
+      "status": "done",
+      "error": null,
+      "startedAt": "2026-08-07 13:38:10",
+      "finishedAt": "2026-08-07 13:38:10"
+    },
+    {
+      "step": "regulatorExport",
+      "status": "running",
+      "error": null,
+      "startedAt": "2026-08-07 13:38:10",
+      "finishedAt": null
+    }
+  ],
+  "settlement": {
+    "token": "0xmock",
+    "mode": "mock"
+  },
+  "freezeFormula": {
+    "description": "score = frozen ? round(rawScore * 0.35) : rawScore",
+    "demo": "raw 88 → frozen 31"
+  },
+  "events": [
+    {
+      "id": 1,
+      "step": null,
+      "kind": "bootstrap",
+      "message": "Demo run created with role wallets",
+      "payload": {
+        "roles": [
+          {
+            "role": "owner",
+            "address": "0xe2d647cD8A21cDB17B02Bc696879c218b7A4957d",
+            "customerId": "OPROWNEA5BBD45CXX"
+          },
+          {
+            "role": "energyOp",
+            "address": "0xC3Da0001f0023702Fc7Cdea9F3607522d6099B5B",
+            "customerId": "OPRENERA5BBD45CXX"
+          },
+          {
+            "role": "maintOp",
+            "address": "0x27bC8FFDA235bAA9622596a88A6D32D9266cfa37",
+            "customerId": "OPRMAINA5BBD45CXX"
+          },
+          {
+            "role": "replacement",
+            "address": "0xDE46a7b415e299212eE8Bd953d400eb0EF676dC5",
+            "customerId": "OPRREPLA5BBD45CXX"
+          },
+          {
+            "role": "investor",
+            "address": "0xDF2B2D30f6Ee44d157412270F9F55F0f27ABeaDc",
+            "customerId": "OPRINVEA5BBD45CXX"
+          },
+          {
+            "role": "regulator",
+            "address": "0xA1013a5Ff3f66be143E31AFB687Ba7FBFEA28CB4",
+            "customerId": "OPRREGUA5BBD45CXX"
+          }
+        ]
+      },
+      "createdAt": "2026-08-07 13:38:10"
+    },
+    {
+      "id": 2,
+      "step": null,
+      "kind": "run-all.start",
+      "message": "Sequential demo run started",
+      "payload": {},
+      "createdAt": "2026-08-07 13:38:10"
+    },
+    {
+      "id": 3,
+      "step": "setupIdentities",
+      "kind": "step.start",
+      "message": "Starting setupIdentities",
+      "payload": {},
+      "createdAt": "2026-08-07 13:38:10"
+    },
+    {
+      "id": 4,
+      "step": "setupIdentities",
+      "kind": "identity.mock",
+      "message": "Mock A-Passes assigned",
+      "payload": {},
+      "createdAt": "2026-08-07 13:38:10"
+    },
+    {
+      "id": 5,
+      "step": "setupIdentities",
+      "kind": "step.done",
+      "message": "Completed setupIdentities",
+      "payload": {
+        "mode": "mock",
+        "roles": [
+          "owner",
+          "energyOp",
+          "maintOp",
+          "replacement",
+          "investor",
+          "regulator"
+        ]
+      },
+      "createdAt": "2026-08-07 13:38:10"
+    },
+    {
+      "id": 6,
+      "step": "setupAsset",
+      "kind": "step.start",
+      "message": "Starting setupAsset",
+      "payload": {},
+      "createdAt": "2026-08-07 13:38:10"
+    },
+    {
+      "id": 7,
+      "step": "setupAsset",
+      "kind": "scores.mock",
+      "message": "Mock high scores",
+      "payload": {
+        "energy": 100,
+        "maint": 88
+      },
+      "createdAt": "2026-08-07 13:38:10"
+    },
+    {
+      "id": 8,
+      "step": "setupAsset",
+      "kind": "step.done",
+      "message": "Completed setupAsset",
+      "payload": {
+        "mode": "mock",
+        "assetId": 1
+      },
+      "createdAt": "2026-08-07 13:38:10"
+    },
+    {
+      "id": 9,
+      "step": "fundAndStake",
+      "kind": "step.start",
+      "message": "Starting fundAndStake",
+      "payload": {},
+      "createdAt": "2026-08-07 13:38:10"
+    },
+    {
+      "id": 10,
+      "step": "fundAndStake",
+      "kind": "fund.mock",
+      "message": "Mock fund + stake + award",
+      "payload": {},
+      "createdAt": "2026-08-07 13:38:10"
+    },
+    {
+      "id": 11,
+      "step": "fundAndStake",
+      "kind": "step.done",
+      "message": "Completed fundAndStake",
+      "payload": {
+        "mode": "mock",
+        "awarded": true
+      },
+      "createdAt": "2026-08-07 13:38:10"
+    },
+    {
+      "id": 12,
+      "step": "normalOps",
+      "kind": "step.start",
+      "message": "Starting normalOps",
+      "payload": {},
+      "createdAt": "2026-08-07 13:38:10"
+    },
+    {
+      "id": 13,
+      "step": "normalOps",
+      "kind": "revenue.mock",
+      "message": "Mock revenue distribute",
+      "payload": {
+        "score": 100,
+        "band": "full"
+      },
+      "createdAt": "2026-08-07 13:38:10"
+    },
+    {
+      "id": 14,
+      "step": "normalOps",
+      "kind": "step.done",
+      "message": "Completed normalOps",
+      "payload": {
+        "mode": "mock",
+        "score": 100,
+        "travelUrls": []
+      },
+      "createdAt": "2026-08-07 13:38:10"
+    },
+    {
+      "id": 15,
+      "step": "sanctionsEvent",
+      "kind": "step.start",
+      "message": "Starting sanctionsEvent",
+      "payload": {},
+      "createdAt": "2026-08-07 13:38:10"
+    },
+    {
+      "id": 16,
+      "step": "sanctionsEvent",
+      "kind": "freeze.mock",
+      "message": "Mock freeze + auto-list",
+      "payload": {
+        "score": 31,
+        "rawScore": 88
+      },
+      "createdAt": "2026-08-07 13:38:10"
+    },
+    {
+      "id": 17,
+      "step": "sanctionsEvent",
+      "kind": "step.done",
+      "message": "Completed sanctionsEvent",
+      "payload": {
+        "mode": "mock",
+        "score": 31,
+        "rawScore": 88
+      },
+      "createdAt": "2026-08-07 13:38:10"
+    },
+    {
+      "id": 18,
+      "step": "replacementAcquire",
+      "kind": "step.start",
+      "message": "Starting replacementAcquire",
+      "payload": {},
+      "createdAt": "2026-08-07 13:38:10"
+    },
+    {
+      "id": 19,
+      "step": "replacementAcquire",
+      "kind": "acquire.mock",
+      "message": "Mock LOR acquire",
+      "payload": {},
+      "createdAt": "2026-08-07 13:38:10"
+    },
+    {
+      "id": 20,
+      "step": "replacementAcquire",
+      "kind": "step.done",
+      "message": "Completed replacementAcquire",
+      "payload": {
+        "mode": "mock",
+        "holder": "0xde46a7b415e299212ee8bd953d400eb0ef676dc5"
+      },
+      "createdAt": "2026-08-07 13:38:10"
+    },
+    {
+      "id": 21,
+      "step": "regulatorExport",
+      "kind": "step.start",
+      "message": "Starting regulatorExport",
+      "payload": {},
+      "createdAt": "2026-08-07 13:38:10"
+    }
+  ],
+  "travelRuleUrls": [],
+  "note": "Fiat Ramp skipped for live path. Chain is authoritative; SQLite is rebuildable read model."
+}

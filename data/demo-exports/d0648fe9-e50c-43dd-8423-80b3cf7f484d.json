@@ -1,0 +1,298 @@
+{
+  "title": "Opera Protocol — PRD §8 Solar Farm Audit Pack",
+  "generatedAt": "2026-08-07T14:32:36.162Z",
+  "runId": "d0648fe9-e50c-43dd-8423-80b3cf7f484d",
+  "asset": {
+    "name": "Malaysia Solar Farm",
+    "assetId": 2,
+    "energyLorId": 27,
+    "maintLorId": 28
+  },
+  "settlement": {
+    "token": "0x6A7942B254f84822f7237c6C14aD78A00a22BC4E",
+    "mode": "opera-atoken"
+  },
+  "freezeFormula": {
+    "demo": "raw 88 → frozen 31",
+    "multiplier": 0.35
+  },
+  "events": [
+    {
+      "id": 305,
+      "step": null,
+      "kind": "bootstrap",
+      "message": "Demo run created",
+      "payload": {
+        "roles": [
+          {
+            "role": "owner",
+            "address": "0x1CFBFe409C3B9a0f7f5e7858198cE8aD48A3D790",
+            "customerId": "OPROWNED0648FE9XX"
+          },
+          {
+            "role": "energyOp",
+            "address": "0x2ece8E38c56Ac4eb91D382dEbe5aB401dEAbB22e",
+            "customerId": "OPRENERD0648FE9XX"
+          },
+          {
+            "role": "maintOp",
+            "address": "0xF8231035CcbBdA03e6E9353b94Bb0266401b3874",
+            "customerId": "OPRMAIND0648FE9XX"
+          },
+          {
+            "role": "replacement",
+            "address": "0x6D62A3D3445dE3eC17313738778d1A7D4EF20530",
+            "customerId": "OPRREPLD0648FE9XX"
+          },
+          {
+            "role": "investor",
+            "address": "0x105fbb01670173c74C129E9CB7992423FBe53E51",
+            "customerId": "OPRINVED0648FE9XX"
+          },
+          {
+            "role": "regulator",
+            "address": "0x7bF398dd654278DdA34605EFa2Cf9fA40EE47c19",
+            "customerId": "OPRREGUD0648FE9XX"
+          }
+        ]
+      },
+      "createdAt": "2026-08-07 14:31:45"
+    },
+    {
+      "id": 306,
+      "step": "setupIdentities",
+      "kind": "step.start",
+      "message": "Starting setupIdentities",
+      "payload": {},
+      "createdAt": "2026-08-07 14:31:45"
+    },
+    {
+      "id": 307,
+      "step": "setupIdentities",
+      "kind": "step.done",
+      "message": "Completed setupIdentities",
+      "payload": {
+        "owner": {
+          "reused": true,
+          "cvRecordId": "1190"
+        },
+        "energyOp": {
+          "reused": true,
+          "cvRecordId": "1191"
+        },
+        "maintOp": {
+          "reused": true,
+          "cvRecordId": "1192"
+        },
+        "replacement": {
+          "reused": true,
+          "cvRecordId": "1193"
+        },
+        "investor": {
+          "reused": true,
+          "cvRecordId": "1194"
+        },
+        "regulator": {
+          "reused": true,
+          "cvRecordId": "1195"
+        }
+      },
+      "createdAt": "2026-08-07 14:31:47"
+    },
+    {
+      "id": 308,
+      "step": "setupAsset",
+      "kind": "step.start",
+      "message": "Starting setupAsset",
+      "payload": {},
+      "createdAt": "2026-08-07 14:31:47"
+    },
+    {
+      "id": 309,
+      "step": "setupAsset",
+      "kind": "asset.ready",
+      "message": "LORs + mandates published",
+      "payload": {
+        "assetId": 2,
+        "energyLorId": 27,
+        "maintLorId": 28,
+        "energyMandateId": 27,
+        "maintMandateId": 28
+      },
+      "createdAt": "2026-08-07 14:31:54"
+    },
+    {
+      "id": 310,
+      "step": "setupAsset",
+      "kind": "step.done",
+      "message": "Completed setupAsset",
+      "payload": {
+        "assetId": 2,
+        "energyLorId": 27,
+        "maintLorId": 28,
+        "energyMandateId": 27,
+        "maintMandateId": 28
+      },
+      "createdAt": "2026-08-07 14:31:54"
+    },
+    {
+      "id": 311,
+      "step": "fundAndStake",
+      "kind": "step.start",
+      "message": "Starting fundAndStake",
+      "payload": {},
+      "createdAt": "2026-08-07 14:31:54"
+    },
+    {
+      "id": 312,
+      "step": "fundAndStake",
+      "kind": "mandate.award",
+      "message": "Mandates awarded",
+      "payload": {
+        "bidE": "0x38b20c611446d0c224bc847310a0e3f40eed6eccd7df2b5b3a71bac01536b4c0",
+        "bidM": "0x4410453dc6a2b82c8a5f72a938920e2b83cc238fcdfd077001297b3bc2d92b4f",
+        "awardE": "0x8015b68c689de52e773c2239976b121299e6cdb105c113473a45227e5d922b8c",
+        "awardM": "0xead3fe78179e5f2138f0d9118eb8dfe2bfd4ba89c6aaf8dbd78be134ea9a4e81"
+      },
+      "createdAt": "2026-08-07 14:32:17"
+    },
+    {
+      "id": 313,
+      "step": "fundAndStake",
+      "kind": "step.done",
+      "message": "Completed fundAndStake",
+      "payload": {
+        "token": "0x6A7942B254f84822f7237c6C14aD78A00a22BC4E",
+        "bidE": "0x38b20c611446d0c224bc847310a0e3f40eed6eccd7df2b5b3a71bac01536b4c0",
+        "bidM": "0x4410453dc6a2b82c8a5f72a938920e2b83cc238fcdfd077001297b3bc2d92b4f"
+      },
+      "createdAt": "2026-08-07 14:32:17"
+    },
+    {
+      "id": 314,
+      "step": "normalOps",
+      "kind": "step.start",
+      "message": "Starting normalOps",
+      "payload": {},
+      "createdAt": "2026-08-07 14:32:17"
+    },
+    {
+      "id": 315,
+      "step": "normalOps",
+      "kind": "inspection.skip",
+      "message": "Invalid request parameters: Key: 'VerifyApassReq.AToken' Error:Field validation for 'AToken' failed on the 'required' tag",
+      "payload": {},
+      "createdAt": "2026-08-07 14:32:25"
+    },
+    {
+      "id": 316,
+      "step": "normalOps",
+      "kind": "revenue.distribute",
+      "message": "Revenue + oracle done",
+      "payload": {
+        "distTx": "0xa1c2535fe80f9c19e87d37782c44093c61a14ae4809477c6d27bd363f49d31b4",
+        "inspectionTx": null,
+        "score": 100
+      },
+      "createdAt": "2026-08-07 14:32:25"
+    },
+    {
+      "id": 317,
+      "step": "normalOps",
+      "kind": "step.done",
+      "message": "Completed normalOps",
+      "payload": {
+        "distributeTx": "0xa1c2535fe80f9c19e87d37782c44093c61a14ae4809477c6d27bd363f49d31b4",
+        "inspectionTx": null,
+        "energyScore": 100,
+        "travelUrls": [
+          {
+            "txHash": "0xa1c2535fe80f9c19e87d37782c44093c61a14ae4809477c6d27bd363f49d31b4",
+            "error": "[400]Parameter verification failed: The wallet cannot be null"
+          }
+        ]
+      },
+      "createdAt": "2026-08-07 14:32:25"
+    },
+    {
+      "id": 318,
+      "step": "sanctionsEvent",
+      "kind": "step.start",
+      "message": "Starting sanctionsEvent",
+      "payload": {},
+      "createdAt": "2026-08-07 14:32:25"
+    },
+    {
+      "id": 319,
+      "step": "sanctionsEvent",
+      "kind": "lor.auto_listed",
+      "message": "Auto-listed after freeze",
+      "payload": {
+        "score": 31,
+        "listTx": "0xa09afe7b765c4d90014ec2c3c7469c1acc18e7661d658664ef12055d6ed41b0e",
+        "autoListed": true
+      },
+      "createdAt": "2026-08-07 14:32:28"
+    },
+    {
+      "id": 320,
+      "step": "sanctionsEvent",
+      "kind": "step.done",
+      "message": "Completed sanctionsEvent",
+      "payload": {
+        "freezeRequestId": "7ce1a7ea-2e74-494f-96d1-21ede888bccd",
+        "score": 31,
+        "rawScore": 88,
+        "listTx": "0xa09afe7b765c4d90014ec2c3c7469c1acc18e7661d658664ef12055d6ed41b0e",
+        "autoListed": true
+      },
+      "createdAt": "2026-08-07 14:32:28"
+    },
+    {
+      "id": 321,
+      "step": "replacementAcquire",
+      "kind": "step.start",
+      "message": "Starting replacementAcquire",
+      "payload": {},
+      "createdAt": "2026-08-07 14:32:28"
+    },
+    {
+      "id": 322,
+      "step": "replacementAcquire",
+      "kind": "lor.acquired",
+      "message": "Replacement acquired LOR",
+      "payload": {
+        "tx": "0xfc3ee623acbd2e005349de4c7d54780cdb835b8674099eabe02620604d44b205",
+        "holder": "0x6D62A3D3445dE3eC17313738778d1A7D4EF20530"
+      },
+      "createdAt": "2026-08-07 14:32:36"
+    },
+    {
+      "id": 323,
+      "step": "replacementAcquire",
+      "kind": "step.done",
+      "message": "Completed replacementAcquire",
+      "payload": {
+        "acquireTx": "0xfc3ee623acbd2e005349de4c7d54780cdb835b8674099eabe02620604d44b205",
+        "holder": "0x6D62A3D3445dE3eC17313738778d1A7D4EF20530",
+        "score": 100
+      },
+      "createdAt": "2026-08-07 14:32:36"
+    },
+    {
+      "id": 324,
+      "step": "regulatorExport",
+      "kind": "step.start",
+      "message": "Starting regulatorExport",
+      "payload": {},
+      "createdAt": "2026-08-07 14:32:36"
+    }
+  ],
+  "integrity": {
+    "alg": "EIP-191",
+    "contentHash": "0x51bef38dfd9702ca1370186f228a761a2e951f3a067f834dc5b4083a25782450",
+    "sha256": "557aa0387e427354b53c01fef73e5b33df9389c4055d02e68639a0a46a9a61ac",
+    "signer": "0x2514844F312c02Ae3C9d4fEb40db4eC8830b6844",
+    "signature": "0xcd25588a7b2a63e2849a9f135da8dd2c201e97db2b2b0636f1a8d2103c75b03d659f53c9332a314db8332fb81e8b696ecc7bb48cd9d1562ab5a5f546d7fa93be1b"
+  }
+}

@@ -1,0 +1,314 @@
+{
+  "title": "Opera Protocol — PRD §8 Solar Farm Audit Pack",
+  "generatedAt": "2026-08-07T14:30:09.152Z",
+  "runId": "d664e6d1-b9cf-42dd-8e38-098b54944df4",
+  "asset": {
+    "name": "Malaysia Solar Farm",
+    "assetId": 2,
+    "energyLorId": 25,
+    "maintLorId": 26
+  },
+  "settlement": {
+    "token": "0x6A7942B254f84822f7237c6C14aD78A00a22BC4E",
+    "mode": "opera-atoken"
+  },
+  "freezeFormula": {
+    "demo": "raw 88 → frozen 31",
+    "multiplier": 0.35
+  },
+  "events": [
+    {
+      "id": 281,
+      "step": null,
+      "kind": "bootstrap",
+      "message": "Demo run created",
+      "payload": {
+        "roles": [
+          {
+            "role": "owner",
+            "address": "0x1CFBFe409C3B9a0f7f5e7858198cE8aD48A3D790",
+            "customerId": "OPROWNED664E6D1XX"
+          },
+          {
+            "role": "energyOp",
+            "address": "0x2ece8E38c56Ac4eb91D382dEbe5aB401dEAbB22e",
+            "customerId": "OPRENERD664E6D1XX"
+          },
+          {
+            "role": "maintOp",
+            "address": "0xF8231035CcbBdA03e6E9353b94Bb0266401b3874",
+            "customerId": "OPRMAIND664E6D1XX"
+          },
+          {
+            "role": "replacement",
+            "address": "0x6D62A3D3445dE3eC17313738778d1A7D4EF20530",
+            "customerId": "OPRREPLD664E6D1XX"
+          },
+          {
+            "role": "investor",
+            "address": "0x105fbb01670173c74C129E9CB7992423FBe53E51",
+            "customerId": "OPRINVED664E6D1XX"
+          },
+          {
+            "role": "regulator",
+            "address": "0x7bF398dd654278DdA34605EFa2Cf9fA40EE47c19",
+            "customerId": "OPRREGUD664E6D1XX"
+          }
+        ]
+      },
+      "createdAt": "2026-08-07 14:28:03"
+    },
+    {
+      "id": 282,
+      "step": "setupIdentities",
+      "kind": "step.start",
+      "message": "Starting setupIdentities",
+      "payload": {},
+      "createdAt": "2026-08-07 14:28:03"
+    },
+    {
+      "id": 283,
+      "step": "setupIdentities",
+      "kind": "step.done",
+      "message": "Completed setupIdentities",
+      "payload": {
+        "owner": {
+          "reused": true,
+          "cvRecordId": "1190"
+        },
+        "energyOp": {
+          "reused": true,
+          "cvRecordId": "1191"
+        },
+        "maintOp": {
+          "reused": true,
+          "cvRecordId": "1192"
+        },
+        "replacement": {
+          "reused": true,
+          "cvRecordId": "1193"
+        },
+        "investor": {
+          "reused": true,
+          "cvRecordId": "1194"
+        },
+        "regulator": {
+          "reused": true,
+          "cvRecordId": "1195"
+        }
+      },
+      "createdAt": "2026-08-07 14:28:05"
+    },
+    {
+      "id": 284,
+      "step": "setupAsset",
+      "kind": "step.start",
+      "message": "Starting setupAsset",
+      "payload": {},
+      "createdAt": "2026-08-07 14:28:05"
+    },
+    {
+      "id": 285,
+      "step": "setupAsset",
+      "kind": "asset.ready",
+      "message": "LORs + mandates published",
+      "payload": {
+        "assetId": 2,
+        "energyLorId": 25,
+        "maintLorId": 26,
+        "energyMandateId": 25,
+        "maintMandateId": 26
+      },
+      "createdAt": "2026-08-07 14:28:12"
+    },
+    {
+      "id": 286,
+      "step": "setupAsset",
+      "kind": "step.done",
+      "message": "Completed setupAsset",
+      "payload": {
+        "assetId": 2,
+        "energyLorId": 25,
+        "maintLorId": 26,
+        "energyMandateId": 25,
+        "maintMandateId": 26
+      },
+      "createdAt": "2026-08-07 14:28:12"
+    },
+    {
+      "id": 287,
+      "step": "fundAndStake",
+      "kind": "step.start",
+      "message": "Starting fundAndStake",
+      "payload": {},
+      "createdAt": "2026-08-07 14:28:12"
+    },
+    {
+      "id": 288,
+      "step": "fundAndStake",
+      "kind": "mandate.award",
+      "message": "Mandates awarded",
+      "payload": {
+        "bidE": "0xdd176dc672ed4a6b96abfca79a979ae8e56557dc547aac991e097cd4ce5c68c0",
+        "bidM": "0x0849451df19ea6122f9242423658c1932cea4282817a4ed86a6de11c15899bf9",
+        "awardE": "0xd3a03e909b4aef4e898b6d8ad78a2a8cb93145f6ea5e8ddb199d85e93aac3a7c",
+        "awardM": "0xdfeff6dcfedc25f1b31ce465e1375ded332160a965bffc12c9e973082f69f810"
+      },
+      "createdAt": "2026-08-07 14:28:40"
+    },
+    {
+      "id": 289,
+      "step": "fundAndStake",
+      "kind": "step.done",
+      "message": "Completed fundAndStake",
+      "payload": {
+        "token": "0x6A7942B254f84822f7237c6C14aD78A00a22BC4E",
+        "bidE": "0xdd176dc672ed4a6b96abfca79a979ae8e56557dc547aac991e097cd4ce5c68c0",
+        "bidM": "0x0849451df19ea6122f9242423658c1932cea4282817a4ed86a6de11c15899bf9"
+      },
+      "createdAt": "2026-08-07 14:28:40"
+    },
+    {
+      "id": 290,
+      "step": "normalOps",
+      "kind": "step.start",
+      "message": "Starting normalOps",
+      "payload": {},
+      "createdAt": "2026-08-07 14:28:40"
+    },
+    {
+      "id": 291,
+      "step": "normalOps",
+      "kind": "inspection.skip",
+      "message": "Invalid request parameters: Key: 'VerifyApassReq.AToken' Error:Field validation for 'AToken' failed on the 'required' tag",
+      "payload": {},
+      "createdAt": "2026-08-07 14:28:47"
+    },
+    {
+      "id": 292,
+      "step": "normalOps",
+      "kind": "revenue.distribute",
+      "message": "Revenue + oracle done",
+      "payload": {
+        "distTx": "0x9dd93774b7c58baad3259ff01ff6bc5bc6d44e559a095d65832a85de6184a564",
+        "inspectionTx": null,
+        "score": 100
+      },
+      "createdAt": "2026-08-07 14:28:49"
+    },
+    {
+      "id": 293,
+      "step": "normalOps",
+      "kind": "step.done",
+      "message": "Completed normalOps",
+      "payload": {
+        "distributeTx": "0x9dd93774b7c58baad3259ff01ff6bc5bc6d44e559a095d65832a85de6184a564",
+        "inspectionTx": null,
+        "energyScore": 100,
+        "travelUrls": [
+          {
+            "txHash": "0x9dd93774b7c58baad3259ff01ff6bc5bc6d44e559a095d65832a85de6184a564",
+            "error": "[400]Parameter verification failed: The wallet cannot be null"
+          }
+        ]
+      },
+      "createdAt": "2026-08-07 14:28:49"
+    },
+    {
+      "id": 294,
+      "step": "sanctionsEvent",
+      "kind": "step.start",
+      "message": "Starting sanctionsEvent",
+      "payload": {},
+      "createdAt": "2026-08-07 14:28:49"
+    },
+    {
+      "id": 295,
+      "step": "sanctionsEvent",
+      "kind": "lor.auto_listed",
+      "message": "Auto-listed after freeze",
+      "payload": {
+        "score": 31,
+        "listTx": "0xd59bed8afc151eb7e99c3c49477b5c59856e06ed915e47bed7994be99ec370ce",
+        "autoListed": true
+      },
+      "createdAt": "2026-08-07 14:28:54"
+    },
+    {
+      "id": 296,
+      "step": "sanctionsEvent",
+      "kind": "step.done",
+      "message": "Completed sanctionsEvent",
+      "payload": {
+        "freezeRequestId": "535974ae-0a3c-4c18-97d3-cedf6d0d155c",
+        "score": 31,
+        "rawScore": 88,
+        "listTx": "0xd59bed8afc151eb7e99c3c49477b5c59856e06ed915e47bed7994be99ec370ce",
+        "autoListed": true
+      },
+      "createdAt": "2026-08-07 14:28:54"
+    },
+    {
+      "id": 297,
+      "step": "replacementAcquire",
+      "kind": "step.start",
+      "message": "Starting replacementAcquire",
+      "payload": {},
+      "createdAt": "2026-08-07 14:28:54"
+    },
+    {
+      "id": 298,
+      "step": "replacementAcquire",
+      "kind": "step.failed",
+      "message": "The contract function \"acquireLOR\" reverted with the following signature:\n0x322fde89\n\nUnable to decode signature \"0x322fde89\" as it was not found on the provided ABI.\nMake sure you are using the correct ABI and that the error exists on it.\nYou can look up the decoded signature here: https://4byte.sourcify.dev/?q=0x322fde89.\n \nContract Call:\n  address:   0xc5E78532225B18e174FeCe089A854ac628179476\n  function:  acquireLOR(uint256 lorId)\n  args:                (26)\n  sender:    0x6D62A3D3445dE3eC17313738778d1A7D4EF20530\n\nDocs: https://viem.sh/docs/contract/decodeErrorResult\nDetails: execution reverted\nVersion: viem@2.55.11",
+      "payload": {},
+      "createdAt": "2026-08-07 14:28:59"
+    },
+    {
+      "id": 299,
+      "step": "replacementAcquire",
+      "kind": "step.start",
+      "message": "Starting replacementAcquire",
+      "payload": {},
+      "createdAt": "2026-08-07 14:30:04"
+    },
+    {
+      "id": 300,
+      "step": "replacementAcquire",
+      "kind": "lor.acquired",
+      "message": "Replacement acquired LOR",
+      "payload": {
+        "tx": "0x758c2bca9584cd83732a36c6649099fec788d30bf66805f417b5046e8e8bf335",
+        "holder": "0x6D62A3D3445dE3eC17313738778d1A7D4EF20530"
+      },
+      "createdAt": "2026-08-07 14:30:09"
+    },
+    {
+      "id": 301,
+      "step": "replacementAcquire",
+      "kind": "step.done",
+      "message": "Completed replacementAcquire",
+      "payload": {
+        "acquireTx": "0x758c2bca9584cd83732a36c6649099fec788d30bf66805f417b5046e8e8bf335",
+        "holder": "0x6D62A3D3445dE3eC17313738778d1A7D4EF20530",
+        "score": 100
+      },
+      "createdAt": "2026-08-07 14:30:09"
+    },
+    {
+      "id": 302,
+      "step": "regulatorExport",
+      "kind": "step.start",
+      "message": "Starting regulatorExport",
+      "payload": {},
+      "createdAt": "2026-08-07 14:30:09"
+    }
+  ],
+  "integrity": {
+    "alg": "EIP-191",
+    "contentHash": "0xb32f4f09e94f0c285256837d35c2a0a18a0152e6e4249aa51654ffde8f4ab9a9",
+    "sha256": "b460f42481c2a28f74a381e6071703c6bd6fa31b78ccd797e1abed94c9344f0f",
+    "signer": "0x2514844F312c02Ae3C9d4fEb40db4eC8830b6844",
+    "signature": "0x897377f7b97187ef987786d65e632dda683a18deb69c5339e242581d40b2a8b749e0405b3cadbe4d8809f1dc1da0abe3058d9b366572b14ea268c76c71c42c9d1c"
+  }
+}

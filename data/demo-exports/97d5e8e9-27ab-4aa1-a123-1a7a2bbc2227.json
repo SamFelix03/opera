@@ -1,0 +1,517 @@
+{
+  "title": "Opera Protocol — PRD §8 Solar Farm Audit Pack",
+  "generatedAt": "2026-08-07T14:01:27.722Z",
+  "runId": "97d5e8e9-27ab-4aa1-a123-1a7a2bbc2227",
+  "asset": {
+    "name": "Malaysia Solar Farm",
+    "revenueMonthlyMyr": 180000,
+    "assetId": 2,
+    "energyLorId": 15,
+    "maintLorId": 16,
+    "energyMandateId": 15,
+    "maintMandateId": 16
+  },
+  "roles": [
+    {
+      "role": "energyOp",
+      "address": "0x2ece8e38c56ac4eb91d382debe5ab401deabb22e",
+      "customerId": "OPRENER97D5E8E9XX",
+      "cvRecordId": "1191"
+    },
+    {
+      "role": "investor",
+      "address": "0x105fbb01670173c74c129e9cb7992423fbe53e51",
+      "customerId": "OPRINVE97D5E8E9XX",
+      "cvRecordId": "1194"
+    },
+    {
+      "role": "maintOp",
+      "address": "0xf8231035ccbbda03e6e9353b94bb0266401b3874",
+      "customerId": "OPRMAIN97D5E8E9XX",
+      "cvRecordId": "1192"
+    },
+    {
+      "role": "owner",
+      "address": "0x1cfbfe409c3b9a0f7f5e7858198ce8ad48a3d790",
+      "customerId": "OPROWNE97D5E8E9XX",
+      "cvRecordId": "1190"
+    },
+    {
+      "role": "regulator",
+      "address": "0x7bf398dd654278dda34605efa2cf9fa40ee47c19",
+      "customerId": "OPRREGU97D5E8E9XX",
+      "cvRecordId": "1195"
+    },
+    {
+      "role": "replacement",
+      "address": "0x6d62a3d3445de3ec17313738778d1a7d4ef20530",
+      "customerId": "OPRREPL97D5E8E9XX",
+      "cvRecordId": "1193"
+    }
+  ],
+  "steps": [
+    {
+      "step": "setupIdentities",
+      "status": "done",
+      "error": null,
+      "startedAt": "2026-08-07 14:00:43",
+      "finishedAt": "2026-08-07 14:00:45"
+    },
+    {
+      "step": "setupAsset",
+      "status": "done",
+      "error": null,
+      "startedAt": "2026-08-07 14:00:45",
+      "finishedAt": "2026-08-07 14:00:51"
+    },
+    {
+      "step": "fundAndStake",
+      "status": "failed",
+      "error": "The contract function \"bid\" reverted with the following reason:\nSigner had insufficient balance\n\nContract Call:\n  address:   0xe33c7296173953C8376D14C7AA2D64Bb946a4644\n  function:  bid(uint256 mandateId)\n  args:         (16)\n  sender:    0xF8231035CcbBdA03e6E9353b94Bb0266401b3874\n\nDocs: https://viem.sh/docs/contract/writeContract\nDetails: Signer had insufficient balance\nVersion: viem@2.55.11",
+      "startedAt": "2026-08-07 14:00:51",
+      "finishedAt": "2026-08-07 14:01:19"
+    },
+    {
+      "step": "normalOps",
+      "status": "failed",
+      "error": "principalOk=false — refusing action",
+      "startedAt": "2026-08-07 14:01:19",
+      "finishedAt": "2026-08-07 14:01:24"
+    },
+    {
+      "step": "sanctionsEvent",
+      "status": "failed",
+      "error": "[CV_100]Wallet not found for this customer",
+      "startedAt": "2026-08-07 14:01:24",
+      "finishedAt": "2026-08-07 14:01:24"
+    },
+    {
+      "step": "replacementAcquire",
+      "status": "failed",
+      "error": "The contract function \"acquireLOR\" reverted with the following reason:\nnot listed\n\nContract Call:\n  address:   0xc5E78532225B18e174FeCe089A854ac628179476\n  function:  acquireLOR(uint256 lorId)\n  args:                (16)\n  sender:    0x6D62A3D3445dE3eC17313738778d1A7D4EF20530\n\nDocs: https://viem.sh/docs/contract/writeContract\nDetails: execution reverted: not listed\nVersion: viem@2.55.11",
+      "startedAt": "2026-08-07 14:01:24",
+      "finishedAt": "2026-08-07 14:01:27"
+    },
+    {
+      "step": "regulatorExport",
+      "status": "running",
+      "error": null,
+      "startedAt": "2026-08-07 14:01:27",
+      "finishedAt": null
+    }
+  ],
+  "settlement": {
+    "token": "0x6A7942B254f84822f7237c6C14aD78A00a22BC4E",
+    "mode": "opera-atoken"
+  },
+  "freezeFormula": {
+    "description": "score = frozen ? round(rawScore * 0.35) : rawScore",
+    "demo": "raw 88 → frozen 31"
+  },
+  "events": [
+    {
+      "id": 134,
+      "step": null,
+      "kind": "bootstrap",
+      "message": "Demo run created with role wallets",
+      "payload": {
+        "roles": [
+          {
+            "role": "owner",
+            "address": "0x1CFBFe409C3B9a0f7f5e7858198cE8aD48A3D790",
+            "customerId": "OPROWNE97D5E8E9XX"
+          },
+          {
+            "role": "energyOp",
+            "address": "0x2ece8E38c56Ac4eb91D382dEbe5aB401dEAbB22e",
+            "customerId": "OPRENER97D5E8E9XX"
+          },
+          {
+            "role": "maintOp",
+            "address": "0xF8231035CcbBdA03e6E9353b94Bb0266401b3874",
+            "customerId": "OPRMAIN97D5E8E9XX"
+          },
+          {
+            "role": "replacement",
+            "address": "0x6D62A3D3445dE3eC17313738778d1A7D4EF20530",
+            "customerId": "OPRREPL97D5E8E9XX"
+          },
+          {
+            "role": "investor",
+            "address": "0x105fbb01670173c74C129E9CB7992423FBe53E51",
+            "customerId": "OPRINVE97D5E8E9XX"
+          },
+          {
+            "role": "regulator",
+            "address": "0x7bF398dd654278DdA34605EFa2Cf9fA40EE47c19",
+            "customerId": "OPRREGU97D5E8E9XX"
+          }
+        ]
+      },
+      "createdAt": "2026-08-07 14:00:43"
+    },
+    {
+      "id": 135,
+      "step": "setupIdentities",
+      "kind": "step.start",
+      "message": "Starting setupIdentities",
+      "payload": {},
+      "createdAt": "2026-08-07 14:00:43"
+    },
+    {
+      "id": 136,
+      "step": "setupIdentities",
+      "kind": "apass.reuse",
+      "message": "Reused A-Pass for owner",
+      "payload": {
+        "address": "0x1cfbfe409c3b9a0f7f5e7858198ce8ad48a3d790",
+        "requestId": "10fc25bb-0b85-4bf8-8f33-d202ec3fddac"
+      },
+      "createdAt": "2026-08-07 14:00:43"
+    },
+    {
+      "id": 137,
+      "step": "setupIdentities",
+      "kind": "apass.reuse",
+      "message": "Reused A-Pass for energyOp",
+      "payload": {
+        "address": "0x2ece8e38c56ac4eb91d382debe5ab401deabb22e",
+        "requestId": "f85dbf89-8578-4fe5-8239-889c52aee4c4"
+      },
+      "createdAt": "2026-08-07 14:00:43"
+    },
+    {
+      "id": 138,
+      "step": "setupIdentities",
+      "kind": "apass.reuse",
+      "message": "Reused A-Pass for maintOp",
+      "payload": {
+        "address": "0xf8231035ccbbda03e6e9353b94bb0266401b3874",
+        "requestId": "87da8f73-a8d9-4377-b5bb-f71183b57417"
+      },
+      "createdAt": "2026-08-07 14:00:44"
+    },
+    {
+      "id": 139,
+      "step": "setupIdentities",
+      "kind": "apass.reuse",
+      "message": "Reused A-Pass for replacement",
+      "payload": {
+        "address": "0x6d62a3d3445de3ec17313738778d1a7d4ef20530",
+        "requestId": "d1f4c263-817d-46d3-8b97-d7559e2f0d69"
+      },
+      "createdAt": "2026-08-07 14:00:44"
+    },
+    {
+      "id": 140,
+      "step": "setupIdentities",
+      "kind": "apass.reuse",
+      "message": "Reused A-Pass for investor",
+      "payload": {
+        "address": "0x105fbb01670173c74c129e9cb7992423fbe53e51",
+        "requestId": "9eb198f1-c381-44ed-ac01-041b7fe58fd5"
+      },
+      "createdAt": "2026-08-07 14:00:44"
+    },
+    {
+      "id": 141,
+      "step": "setupIdentities",
+      "kind": "apass.reuse",
+      "message": "Reused A-Pass for regulator",
+      "payload": {
+        "address": "0x7bf398dd654278dda34605efa2cf9fa40ee47c19",
+        "requestId": "1d6f42dc-9b24-43f7-b457-34e274b0be92"
+      },
+      "createdAt": "2026-08-07 14:00:45"
+    },
+    {
+      "id": 142,
+      "step": "setupIdentities",
+      "kind": "step.done",
+      "message": "Completed setupIdentities",
+      "payload": {
+        "owner": {
+          "reused": true,
+          "subTier": 0,
+          "tier": "50",
+          "expirationTime": 1880719162,
+          "subGroup": "",
+          "cvRecordId": "1190",
+          "countries": [
+            "SG"
+          ],
+          "currentKycHash": "0x70cabe480189109831da1c0369e0c93fb33879061588902ff35487fea592fcd1",
+          "group": "",
+          "status": 1,
+          "requestId": "10fc25bb-0b85-4bf8-8f33-d202ec3fddac"
+        },
+        "energyOp": {
+          "reused": true,
+          "subTier": 0,
+          "tier": "50",
+          "expirationTime": 1880719162,
+          "subGroup": "",
+          "cvRecordId": "1191",
+          "countries": [
+            "SG"
+          ],
+          "currentKycHash": "0xb94ab5d9be06190097904ec2c0535052faa70f6752068c7fb04d3e8f435e86a3",
+          "group": "",
+          "status": 1,
+          "requestId": "f85dbf89-8578-4fe5-8239-889c52aee4c4"
+        },
+        "maintOp": {
+          "reused": true,
+          "subTier": 0,
+          "tier": "50",
+          "expirationTime": 1880719162,
+          "subGroup": "",
+          "cvRecordId": "1192",
+          "countries": [
+            "SG"
+          ],
+          "currentKycHash": "0x30eba4dc9c5932d3352d8b00389ded3477f964e76ce330a7a4de856cbad93b97",
+          "group": "",
+          "status": 1,
+          "requestId": "87da8f73-a8d9-4377-b5bb-f71183b57417"
+        },
+        "replacement": {
+          "reused": true,
+          "subTier": 0,
+          "tier": "50",
+          "expirationTime": 1880719162,
+          "subGroup": "",
+          "cvRecordId": "1193",
+          "countries": [
+            "SG"
+          ],
+          "currentKycHash": "0x608532634fa6667dead40cbc443af7cf37513ebcd3f7291a0ca3d123eba446b1",
+          "group": "",
+          "status": 1,
+          "requestId": "d1f4c263-817d-46d3-8b97-d7559e2f0d69"
+        },
+        "investor": {
+          "reused": true,
+          "subTier": 0,
+          "tier": "50",
+          "expirationTime": 1880719162,
+          "subGroup": "",
+          "cvRecordId": "1194",
+          "countries": [
+            "SG"
+          ],
+          "currentKycHash": "0xd281ec291239a6800ec41bc0b29a34d4098f733df6c45f52610323ca7f0a3798",
+          "group": "",
+          "status": 1,
+          "requestId": "9eb198f1-c381-44ed-ac01-041b7fe58fd5"
+        },
+        "regulator": {
+          "reused": true,
+          "subTier": 0,
+          "tier": "50",
+          "expirationTime": 1880719162,
+          "subGroup": "",
+          "cvRecordId": "1195",
+          "countries": [
+            "SG"
+          ],
+          "currentKycHash": "0x093364084ea0cebbb48eaef7b2c3790dad314ce90fc75a1d97a93ebee404fe7b",
+          "group": "",
+          "status": 1,
+          "requestId": "1d6f42dc-9b24-43f7-b457-34e274b0be92"
+        }
+      },
+      "createdAt": "2026-08-07 14:00:45"
+    },
+    {
+      "id": 143,
+      "step": "setupAsset",
+      "kind": "step.start",
+      "message": "Starting setupAsset",
+      "payload": {},
+      "createdAt": "2026-08-07 14:00:45"
+    },
+    {
+      "id": 144,
+      "step": "setupAsset",
+      "kind": "score.set",
+      "message": "Set energy score=100",
+      "payload": {
+        "address": "0x2ece8e38c56ac4eb91d382debe5ab401deabb22e",
+        "score": 100,
+        "tx": "0xf2b16e03e0cc2bcf386f74679d2585ac3185d147021e3317ebbb3cb0923d8349"
+      },
+      "createdAt": "2026-08-07 14:00:46"
+    },
+    {
+      "id": 145,
+      "step": "setupAsset",
+      "kind": "score.set",
+      "message": "Set maint score=88",
+      "payload": {
+        "address": "0xf8231035ccbbda03e6e9353b94bb0266401b3874",
+        "score": 88,
+        "tx": "0xba39566c4099e9b690810da0ec7b65fe73b35047d9f89d60e1fca52855189d97"
+      },
+      "createdAt": "2026-08-07 14:00:47"
+    },
+    {
+      "id": 146,
+      "step": "setupAsset",
+      "kind": "asset.ready",
+      "message": "LORs minted and mandates published",
+      "payload": {
+        "assetId": 2,
+        "energyLorId": 15,
+        "maintLorId": 16,
+        "energyMandateId": 15,
+        "maintMandateId": 16,
+        "energyScore": 100,
+        "maintScore": 88
+      },
+      "createdAt": "2026-08-07 14:00:51"
+    },
+    {
+      "id": 147,
+      "step": "setupAsset",
+      "kind": "step.done",
+      "message": "Completed setupAsset",
+      "payload": {
+        "assetId": 2,
+        "energyLorId": 15,
+        "maintLorId": 16,
+        "energyMandateId": 15,
+        "maintMandateId": 16
+      },
+      "createdAt": "2026-08-07 14:00:51"
+    },
+    {
+      "id": 148,
+      "step": "fundAndStake",
+      "kind": "step.start",
+      "message": "Starting fundAndStake",
+      "payload": {},
+      "createdAt": "2026-08-07 14:00:51"
+    },
+    {
+      "id": 149,
+      "step": "fundAndStake",
+      "kind": "settlement.resolve",
+      "message": "Using Cleanverse Opera A-Token (OPRACVA) as CVA settlement",
+      "payload": {
+        "token": "0x6A7942B254f84822f7237c6C14aD78A00a22BC4E",
+        "mode": "opera-atoken",
+        "decimals": 6,
+        "note": "Using Cleanverse Opera A-Token (OPRACVA) as CVA settlement"
+      },
+      "createdAt": "2026-08-07 14:00:51"
+    },
+    {
+      "id": 150,
+      "step": "fundAndStake",
+      "kind": "apass.protocol",
+      "message": "Ensured A-Pass on settlement recipient contracts",
+      "payload": {
+        "protocolAddrs": [
+          "0xe33c7296173953C8376D14C7AA2D64Bb946a4644",
+          "0xc5E78532225B18e174FeCe089A854ac628179476",
+          "0x583c17fDf9031ece81251eA2f8c819C84fE7f69d"
+        ]
+      },
+      "createdAt": "2026-08-07 14:01:14"
+    },
+    {
+      "id": 151,
+      "step": "fundAndStake",
+      "kind": "step.failed",
+      "message": "The contract function \"bid\" reverted with the following reason:\nSigner had insufficient balance\n\nContract Call:\n  address:   0xe33c7296173953C8376D14C7AA2D64Bb946a4644\n  function:  bid(uint256 mandateId)\n  args:         (16)\n  sender:    0xF8231035CcbBdA03e6E9353b94Bb0266401b3874\n\nDocs: https://viem.sh/docs/contract/writeContract\nDetails: Signer had insufficient balance\nVersion: viem@2.55.11",
+      "payload": {
+        "error": {
+          "message": "The contract function \"bid\" reverted with the following reason:\nSigner had insufficient balance\n\nContract Call:\n  address:   0xe33c7296173953C8376D14C7AA2D64Bb946a4644\n  function:  bid(uint256 mandateId)\n  args:         (16)\n  sender:    0xF8231035CcbBdA03e6E9353b94Bb0266401b3874\n\nDocs: https://viem.sh/docs/contract/writeContract\nDetails: Signer had insufficient balance\nVersion: viem@2.55.11",
+          "stack": "ContractFunctionExecutionError: The contract function \"bid\" reverted with the following reason:\nSigner had insufficient balance\n\nContract Call:\n  address:   0xe33c7296173953C8376D14C7AA2D64Bb946a4644\n  function:  bid(uint256 mandateId)\n  args:         (16)\n  sender:    0xF8231035CcbBdA03e6E9353b94Bb0266401b3874\n\nDocs: https://viem.sh/docs/contract/writeContract\nDetails: Signer had insufficient balance\nVersion: viem@2.55.11\n    at getContractError (/Users/sam/traco/node_modules/.pnpm/viem@2.55.11_typescript@5.9.3_zod@3.25.76/node_modules/viem/utils/errors/getContractError.ts:82:10)\n    at AsyncFunction.internal (/Users/sam/traco/node_modules/.pnpm/viem@2.55.11_typescript@5.9.3_zod@3.25.76/node_modules/viem/actions/wallet/writeContract.ts:241:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async OperaAgent.bidOn (/Users/sam/traco/packages/agents/src/agent.ts:106:21)\n    at async DemoOrchestrator.fundAndStake (/Users/sam/traco/packages/backend/src/demo/orchestrator.ts:734:18)\n    at async DemoOrchestrator.runStep (/Users/sam/traco/packages/backend/src/demo/orchestrator.ts:229:20)\n    at async Object.<anonymous> (/Users/sam/traco/packages/backend/src/demo/routes.ts:48:22)"
+        }
+      },
+      "createdAt": "2026-08-07 14:01:19"
+    },
+    {
+      "id": 152,
+      "step": "normalOps",
+      "kind": "step.start",
+      "message": "Starting normalOps",
+      "payload": {},
+      "createdAt": "2026-08-07 14:01:19"
+    },
+    {
+      "id": 153,
+      "step": "normalOps",
+      "kind": "step.failed",
+      "message": "principalOk=false — refusing action",
+      "payload": {
+        "error": {
+          "message": "principalOk=false — refusing action",
+          "stack": "Error: principalOk=false — refusing action\n    at OperaAgent.executeScoped (/Users/sam/traco/packages/agents/src/agent.ts:131:20)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async DemoOrchestrator.normalOps (/Users/sam/traco/packages/backend/src/demo/orchestrator.ts:843:20)\n    at async DemoOrchestrator.runStep (/Users/sam/traco/packages/backend/src/demo/orchestrator.ts:232:20)\n    at async Object.<anonymous> (/Users/sam/traco/packages/backend/src/demo/routes.ts:48:22)"
+        }
+      },
+      "createdAt": "2026-08-07 14:01:24"
+    },
+    {
+      "id": 154,
+      "step": "sanctionsEvent",
+      "kind": "step.start",
+      "message": "Starting sanctionsEvent",
+      "payload": {},
+      "createdAt": "2026-08-07 14:01:24"
+    },
+    {
+      "id": 155,
+      "step": "sanctionsEvent",
+      "kind": "step.failed",
+      "message": "[CV_100]Wallet not found for this customer",
+      "payload": {
+        "error": {
+          "message": "[CV_100]Wallet not found for this customer",
+          "stack": "CleanverseError: [CV_100]Wallet not found for this customer\n    at CleanverseClient.request (/Users/sam/traco/packages/cleanverse-client/src/index.ts:158:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async DemoOrchestrator.sanctionsEvent (/Users/sam/traco/packages/backend/src/demo/orchestrator.ts:994:20)\n    at async DemoOrchestrator.runStep (/Users/sam/traco/packages/backend/src/demo/orchestrator.ts:235:20)\n    at async Object.<anonymous> (/Users/sam/traco/packages/backend/src/demo/routes.ts:48:22)"
+        }
+      },
+      "createdAt": "2026-08-07 14:01:24"
+    },
+    {
+      "id": 156,
+      "step": "replacementAcquire",
+      "kind": "step.start",
+      "message": "Starting replacementAcquire",
+      "payload": {},
+      "createdAt": "2026-08-07 14:01:24"
+    },
+    {
+      "id": 157,
+      "step": "replacementAcquire",
+      "kind": "step.failed",
+      "message": "The contract function \"acquireLOR\" reverted with the following reason:\nnot listed\n\nContract Call:\n  address:   0xc5E78532225B18e174FeCe089A854ac628179476\n  function:  acquireLOR(uint256 lorId)\n  args:                (16)\n  sender:    0x6D62A3D3445dE3eC17313738778d1A7D4EF20530\n\nDocs: https://viem.sh/docs/contract/writeContract\nDetails: execution reverted: not listed\nVersion: viem@2.55.11",
+      "payload": {
+        "error": {
+          "message": "The contract function \"acquireLOR\" reverted with the following reason:\nnot listed\n\nContract Call:\n  address:   0xc5E78532225B18e174FeCe089A854ac628179476\n  function:  acquireLOR(uint256 lorId)\n  args:                (16)\n  sender:    0x6D62A3D3445dE3eC17313738778d1A7D4EF20530\n\nDocs: https://viem.sh/docs/contract/writeContract\nDetails: execution reverted: not listed\nVersion: viem@2.55.11",
+          "stack": "ContractFunctionExecutionError: The contract function \"acquireLOR\" reverted with the following reason:\nnot listed\n\nContract Call:\n  address:   0xc5E78532225B18e174FeCe089A854ac628179476\n  function:  acquireLOR(uint256 lorId)\n  args:                (16)\n  sender:    0x6D62A3D3445dE3eC17313738778d1A7D4EF20530\n\nDocs: https://viem.sh/docs/contract/writeContract\nDetails: execution reverted: not listed\nVersion: viem@2.55.11\n    at getContractError (/Users/sam/traco/node_modules/.pnpm/viem@2.55.11_typescript@5.9.3_zod@3.25.76/node_modules/viem/utils/errors/getContractError.ts:82:10)\n    at AsyncFunction.internal (/Users/sam/traco/node_modules/.pnpm/viem@2.55.11_typescript@5.9.3_zod@3.25.76/node_modules/viem/actions/wallet/writeContract.ts:241:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async DemoOrchestrator.replacementAcquire (/Users/sam/traco/packages/backend/src/demo/orchestrator.ts:1136:19)\n    at async DemoOrchestrator.runStep (/Users/sam/traco/packages/backend/src/demo/orchestrator.ts:238:20)\n    at async Object.<anonymous> (/Users/sam/traco/packages/backend/src/demo/routes.ts:48:22)"
+        }
+      },
+      "createdAt": "2026-08-07 14:01:27"
+    },
+    {
+      "id": 158,
+      "step": "regulatorExport",
+      "kind": "step.start",
+      "message": "Starting regulatorExport",
+      "payload": {},
+      "createdAt": "2026-08-07 14:01:27"
+    }
+  ],
+  "travelRuleUrls": [],
+  "note": "Fiat Ramp skipped for live path. Chain is authoritative; SQLite is rebuildable read model.",
+  "integrity": {
+    "alg": "EIP-191",
+    "contentHash": "0xcf97e2dd32e1b433a04cc83067ef6df1b4ef70dd16583cc452dda12a9ed24eea",
+    "sha256": "d54cecf5f68760e236b31afb47f27f21e577eed696d5a6f99b3e69b6570be064",
+    "signer": "0x2514844F312c02Ae3C9d4fEb40db4eC8830b6844",
+    "signature": "0xeb9f5dee331ca8723b937cd455b54be2ee74c17822c804d36b2b0669c641820335a28782454184a075c0ab7f6707fa4ac085c3f5f0bbb1ce833613c558b969d61b"
+  }
+}

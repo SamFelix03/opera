@@ -1,0 +1,251 @@
+{
+  "title": "Opera Protocol — PRD §8 Solar Farm Audit Pack",
+  "generatedAt": "2026-08-07T14:23:29.563Z",
+  "runId": "71c805e7-0cab-4a2e-8af8-d5370e3dbbea",
+  "asset": {
+    "name": "Malaysia Solar Farm",
+    "assetId": 1,
+    "energyLorId": 1,
+    "maintLorId": 2
+  },
+  "settlement": {
+    "token": "0xmock",
+    "mode": "mock"
+  },
+  "freezeFormula": {
+    "demo": "raw 88 → frozen 31",
+    "multiplier": 0.35
+  },
+  "events": [
+    {
+      "id": 1,
+      "step": null,
+      "kind": "bootstrap",
+      "message": "Demo run created",
+      "payload": {
+        "roles": [
+          {
+            "role": "owner",
+            "address": "0x1CFBFe409C3B9a0f7f5e7858198cE8aD48A3D790",
+            "customerId": "OPROWNE71C805E7XX"
+          },
+          {
+            "role": "energyOp",
+            "address": "0x2ece8E38c56Ac4eb91D382dEbe5aB401dEAbB22e",
+            "customerId": "OPRENER71C805E7XX"
+          },
+          {
+            "role": "maintOp",
+            "address": "0xF8231035CcbBdA03e6E9353b94Bb0266401b3874",
+            "customerId": "OPRMAIN71C805E7XX"
+          },
+          {
+            "role": "replacement",
+            "address": "0x6D62A3D3445dE3eC17313738778d1A7D4EF20530",
+            "customerId": "OPRREPL71C805E7XX"
+          },
+          {
+            "role": "investor",
+            "address": "0x105fbb01670173c74C129E9CB7992423FBe53E51",
+            "customerId": "OPRINVE71C805E7XX"
+          },
+          {
+            "role": "regulator",
+            "address": "0x7bF398dd654278DdA34605EFa2Cf9fA40EE47c19",
+            "customerId": "OPRREGU71C805E7XX"
+          }
+        ]
+      },
+      "createdAt": "2026-08-07 14:23:29"
+    },
+    {
+      "id": 2,
+      "step": null,
+      "kind": "run-all.start",
+      "message": "Sequential demo run started",
+      "payload": {},
+      "createdAt": "2026-08-07 14:23:29"
+    },
+    {
+      "id": 3,
+      "step": "setupIdentities",
+      "kind": "step.start",
+      "message": "Starting setupIdentities",
+      "payload": {},
+      "createdAt": "2026-08-07 14:23:29"
+    },
+    {
+      "id": 4,
+      "step": "setupIdentities",
+      "kind": "identity.mock",
+      "message": "Mock A-Passes",
+      "payload": {},
+      "createdAt": "2026-08-07 14:23:29"
+    },
+    {
+      "id": 5,
+      "step": "setupIdentities",
+      "kind": "step.done",
+      "message": "Completed setupIdentities",
+      "payload": {
+        "mode": "mock"
+      },
+      "createdAt": "2026-08-07 14:23:29"
+    },
+    {
+      "id": 6,
+      "step": "setupAsset",
+      "kind": "step.start",
+      "message": "Starting setupAsset",
+      "payload": {},
+      "createdAt": "2026-08-07 14:23:29"
+    },
+    {
+      "id": 7,
+      "step": "setupAsset",
+      "kind": "scores.mock",
+      "message": "Mock asset ids",
+      "payload": {},
+      "createdAt": "2026-08-07 14:23:29"
+    },
+    {
+      "id": 8,
+      "step": "setupAsset",
+      "kind": "step.done",
+      "message": "Completed setupAsset",
+      "payload": {
+        "mode": "mock",
+        "assetId": 1
+      },
+      "createdAt": "2026-08-07 14:23:29"
+    },
+    {
+      "id": 9,
+      "step": "fundAndStake",
+      "kind": "step.start",
+      "message": "Starting fundAndStake",
+      "payload": {},
+      "createdAt": "2026-08-07 14:23:29"
+    },
+    {
+      "id": 10,
+      "step": "fundAndStake",
+      "kind": "fund.mock",
+      "message": "Mock fund + stake",
+      "payload": {},
+      "createdAt": "2026-08-07 14:23:29"
+    },
+    {
+      "id": 11,
+      "step": "fundAndStake",
+      "kind": "step.done",
+      "message": "Completed fundAndStake",
+      "payload": {
+        "mode": "mock"
+      },
+      "createdAt": "2026-08-07 14:23:29"
+    },
+    {
+      "id": 12,
+      "step": "normalOps",
+      "kind": "step.start",
+      "message": "Starting normalOps",
+      "payload": {},
+      "createdAt": "2026-08-07 14:23:29"
+    },
+    {
+      "id": 13,
+      "step": "normalOps",
+      "kind": "revenue.mock",
+      "message": "Mock revenue",
+      "payload": {
+        "score": 100
+      },
+      "createdAt": "2026-08-07 14:23:29"
+    },
+    {
+      "id": 14,
+      "step": "normalOps",
+      "kind": "step.done",
+      "message": "Completed normalOps",
+      "payload": {
+        "mode": "mock",
+        "score": 100
+      },
+      "createdAt": "2026-08-07 14:23:29"
+    },
+    {
+      "id": 15,
+      "step": "sanctionsEvent",
+      "kind": "step.start",
+      "message": "Starting sanctionsEvent",
+      "payload": {},
+      "createdAt": "2026-08-07 14:23:29"
+    },
+    {
+      "id": 16,
+      "step": "sanctionsEvent",
+      "kind": "freeze.mock",
+      "message": "Mock freeze + auto-list",
+      "payload": {
+        "score": 31,
+        "rawScore": 88
+      },
+      "createdAt": "2026-08-07 14:23:29"
+    },
+    {
+      "id": 17,
+      "step": "sanctionsEvent",
+      "kind": "step.done",
+      "message": "Completed sanctionsEvent",
+      "payload": {
+        "mode": "mock",
+        "score": 31,
+        "rawScore": 88
+      },
+      "createdAt": "2026-08-07 14:23:29"
+    },
+    {
+      "id": 18,
+      "step": "replacementAcquire",
+      "kind": "step.start",
+      "message": "Starting replacementAcquire",
+      "payload": {},
+      "createdAt": "2026-08-07 14:23:29"
+    },
+    {
+      "id": 19,
+      "step": "replacementAcquire",
+      "kind": "acquire.mock",
+      "message": "Mock acquire",
+      "payload": {},
+      "createdAt": "2026-08-07 14:23:29"
+    },
+    {
+      "id": 20,
+      "step": "replacementAcquire",
+      "kind": "step.done",
+      "message": "Completed replacementAcquire",
+      "payload": {
+        "mode": "mock",
+        "holder": "0x6d62a3d3445de3ec17313738778d1a7d4ef20530"
+      },
+      "createdAt": "2026-08-07 14:23:29"
+    },
+    {
+      "id": 21,
+      "step": "regulatorExport",
+      "kind": "step.start",
+      "message": "Starting regulatorExport",
+      "payload": {},
+      "createdAt": "2026-08-07 14:23:29"
+    }
+  ],
+  "integrity": {
+    "alg": "EIP-191",
+    "contentHash": "0xe8e844ec09379982c4d745ded45069d08f5255ea1daa182fe12387ac03a61a94",
+    "sha256": "b2f82f60f54c678e0095eaa2dd01fa8436ae7a247949046f4dc166178b7f4af3",
+    "signer": null,
+    "signature": null
+  }
+}
