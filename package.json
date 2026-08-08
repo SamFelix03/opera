@@ -1,0 +1,30 @@
+{
+  "name": "opera-protocol",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Opera Protocol — compliance-native RWA lifecycle platform on Monad, powered by Cleanverse",
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck && tsc -p scripts/tsconfig.json --noEmit",
+    "dev:api": "pnpm --filter @opera/backend dev",
+    "dev:web": "pnpm --filter @opera/web dev",
+    "launch:atoken": "tsx scripts/launch-opera-atoken.ts"
+  },
+  "dependencies": {
+    "@opera/cleanverse-client": "workspace:^"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "dotenv": "^16.4.7",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2",
+    "viem": "^2.23.13",
+    "vitest": "^3.0.9"
+  }
+}

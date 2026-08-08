@@ -1,0 +1,17 @@
+node_modules
+dist
+.git
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+data/
+coverage/
+.turbo/
+.pnpm-store/
+packages/contracts/cache/
+packages/contracts/out/
+packages/contracts/broadcast/
+*.log
+.DS_Store
+docs/
+keys/
