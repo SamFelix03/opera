@@ -8,6 +8,7 @@ import {
   listNotifications,
   type DemoStepName,
 } from "./state.js";
+import { CAST_ACTIONS, executeCastAct, getCastSnapshot } from "./cast-actions.js";
 import { readFileSync, existsSync } from "node:fs";
 
 export async function registerDemoRoutes(
@@ -28,6 +29,35 @@ export async function registerDemoRoutes(
     const run = orch().getRun(runId);
     if (!run) return reply.code(404).send({ error: "run not found" });
     return run;
+  });
+
+  app.get("/demo/:runId/cast", async (req, reply) => {
+    const { runId } = req.params as { runId: string };
+    const snap = getCastSnapshot(db, orch(), runId);
+    if (!snap) return reply.code(404).send({ error: "run not found" });
+    return snap;
+  });
+
+  app.post("/demo/:runId/act", async (req, reply) => {
+    const { runId } = req.params as { runId: string };
+    if (!orch().getRun(runId)) {
+      return reply.code(404).send({ error: "run not found" });
+    }
+    const body = (req.body ?? {}) as {
+      role?: string;
+      action: string;
+      args?: Record<string, unknown>;
+    };
+    if (!body.action) {
+      return reply.code(400).send({ error: "action required", allowed: CAST_ACTIONS });
+    }
+    try {
+      const result = await executeCastAct(db, orch(), runId, body);
+      return result;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      return reply.code(500).send({ ok: false, error: msg, action: body.action });
+    }
   });
 
   app.post("/demo/:runId/step/:stepName", async (req, reply) => {
@@ -86,7 +116,6 @@ export async function registerDemoRoutes(
     const run = orch().getRun(runId);
     if (!run) return reply.code(404).send({ error: "run not found" });
 
-    // Ensure export exists
     if (!run.exportPath || !existsSync(run.exportPath)) {
       await orch().runStep(runId, "regulatorExport");
     }
