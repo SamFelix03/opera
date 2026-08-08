@@ -1,0 +1,31 @@
+{
+  "name": "@opera/backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "audit:rebuild": "tsx src/audit-rebuild.ts"
+  },
+  "dependencies": {
+    "@opera/agents": "workspace:^",
+    "@opera/cleanverse-client": "workspace:^",
+    "better-sqlite3": "^11.10.0",
+    "dotenv": "^16.4.7",
+    "fastify": "^5.2.1",
+    "pdf-lib": "^1.17.1",
+    "siwe": "^3.0.0",
+    "thread-stream": "^4.2.0",
+    "viem": "^2.23.13",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "typescript": "^5.8.2",
+    "vitest": "^3.0.9"
+  }
+}
