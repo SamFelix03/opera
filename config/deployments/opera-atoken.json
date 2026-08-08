@@ -1,0 +1,25 @@
+{
+  "chain": "monad",
+  "flowType": "LAUNCH",
+  "requestId": "IA20260807212423501848",
+  "admin": "0x2514844F312c02Ae3C9d4fEb40db4eC8830b6844",
+  "symbol": "OPRACVA3275",
+  "result": {
+    "flowType": "LAUNCH",
+    "requestId": "IA20260807212423501848",
+    "applyStatus": "ISSUED",
+    "chain": "monad",
+    "atokenAddress": "0x6A7942B254f84822f7237c6C14aD78A00a22BC4E",
+    "tokenSymbol": "OPRACVA3275",
+    "txHash": "0xc9ad5eabba6805acc4ade018f3ed6fe5c16a788d3da2b68ea0df1dcb4a201870",
+    "issueErrorMsg": "",
+    "issuedAt": "2026-08-07 21:24:24"
+  },
+  "platformAusdc": {
+    "address": "0xaC0893567D43C3E7e6e35a72803df05416C1f20D",
+    "accessCore": "0x8F118338a1fa41E7Fa86Be19A4e8B99Ed58A6EcC",
+    "apass": "0xbA82D189540CaC9DC6FF46B6837CaC1BFdEC58B9",
+    "originUsdc": "0x534b2f3A21130d7a60830c2Df862319e593943A3"
+  },
+  "note": "Wrapped A-Token launches ISSUE_FAILED on Monad in this sandbox; standard LAUNCH is supported."
+}

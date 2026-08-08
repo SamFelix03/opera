@@ -1,0 +1,31 @@
+{
+  "chainId": 10143,
+  "network": "monad-testnet",
+  "rpc": "https://testnet-rpc.monad.xyz",
+  "explorer": "https://testnet.monadvision.com",
+  "deployedAt": "2026-08-07",
+  "deployer": "0x2514844F312c02Ae3C9d4fEb40db4eC8830b6844",
+  "scoreWriter": "0x99Cf8b5a338B86f1360eaf6a1c913634E36201E8",
+  "assetId": 2,
+  "settlementToken": "0x6A7942B254f84822f7237c6C14aD78A00a22BC4E",
+  "settlementSymbol": "OPRACVA3275",
+  "settlementDecimals": 6,
+  "settlementKind": "cleanverse-atoken",
+  "contracts": {
+    "OperaToken": "0x39Ae00FA57B509De9f4Da14B290e80924541AfD2",
+    "AssetRegistry": "0x83B831848eE0A9a2574Cf62a13c23d8eDCa84E9F",
+    "ScoreStore": "0x3DCE9d2269fCB6b2F98619FC417dD0668Ae636C4",
+    "LORRegistry": "0xc5E78532225B18e174FeCe089A854ac628179476",
+    "MandateRegistry": "0xe33c7296173953C8376D14C7AA2D64Bb946a4644",
+    "RevenueManager": "0x583c17fDf9031ece81251eA2f8c819C84fE7f69d",
+    "RightsPriceOracle": "0x03002008F0DD0Bcc06CF40A5973bCebc220B1B66",
+    "OperaAToken": "0x6A7942B254f84822f7237c6C14aD78A00a22BC4E"
+  },
+  "cleanverse": {
+    "atokenRequestId": "IA20260807212423501848",
+    "platformAusdc": "0xaC0893567D43C3E7e6e35a72803df05416C1f20D",
+    "accessCore": "0x8F118338a1fa41E7Fa86Be19A4e8B99Ed58A6EcC",
+    "apassNft": "0xbA82D189540CaC9DC6FF46B6837CaC1BFdEC58B9",
+    "note": "Wrapped A-Token ISSUE_FAILED on Monad; standard LAUNCH A-Token used as CVA settlement."
+  }
+}
