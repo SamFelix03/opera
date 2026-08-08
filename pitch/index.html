@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Opera Protocol — Pitch Deck</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,800&family=Outfit:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="deck" id="deck">
+      <!-- 1. Hero -->
+      <section class="slide is-active" data-slide="1" aria-label="Introduction">
+        <div class="slide-bg"></div>
+        <header class="topbar">
+          <img class="brand-logo" src="assets/opera-logo.png" alt="Opera Protocol" />
+          <div class="partner-stack" aria-label="Partners">
+            <img class="partner-logo cleanverse" src="assets/cleanverse-logo.png" alt="Cleanverse" />
+            <img class="partner-logo monad" src="assets/monad-logo.png" alt="Monad" />
+          </div>
+        </header>
+        <div class="slide-body hero">
+          <img class="hero-wordmark" src="assets/opera-logo.png" alt="" />
+          <h1 class="hero-headline">Opera Protocol</h1>
+          <p class="hero-sub">
+            Opera manages who is allowed to operate a tokenized real-world asset
+            — and updates that authority when compliance changes.
+          </p>
+          <div class="hero-pills">
+            <span>Living Operating Rights</span>
+            <span>Agent Mandate Market</span>
+            <span>Rights Price Oracle</span>
+          </div>
+        </div>
+        <footer class="slide-foot">
+          <span></span>
+          <span class="hint">→ next</span>
+        </footer>
+      </section>
+
+      <!-- 2. What Opera is — from PRD exec / problem / solution -->
+      <section class="slide" data-slide="2" aria-label="What Opera is">
+        <div class="slide-bg"></div>
+        <header class="topbar">
+          <img class="brand-logo" src="assets/opera-logo.png" alt="Opera Protocol" />
+          <span class="slide-label">What Opera is</span>
+        </header>
+        <div class="slide-body idea">
+          <div>
+            <h2>Beyond tokenization</h2>
+            <p class="lede tight" style="margin-bottom: 0.85rem">
+              Existing RWA platforms stop at issuance. Opera models everything
+              after — who may manage the asset, collect from it, distribute
+              revenue, and whether that authority is still valid.
+            </p>
+            <p class="lede">
+              The core instrument is a <strong>Living Operating Right (LOR)</strong>:
+              programmable authority over asset operations, continuously repriced
+              by the holder’s Cleanverse compliance score. Compliance is not a
+              gate — it is the pricing engine.
+            </p>
+          </div>
+          <div class="idea-art compare-stack">
+            <div class="compare-col">
+              <h3>The problem</h3>
+              <ul>
+                <li>
+                  Operators and distributors are managed
+                  <strong>off-chain</strong>, with no live compliance enforcement
+                </li>
+                <li>
+                  Whitelist status is binary — a degraded operator keeps full
+                  authority until a human revokes it
+                </li>
+                <li>
+                  Compliance has no economic consequence beyond manual removal
+                </li>
+              </ul>
+            </div>
+            <div class="compare-col opera">
+              <h3>What Opera does</h3>
+              <ul>
+                <li>
+                  Adds a programmable operational layer on tokenized RWAs
+                </li>
+                <li>
+                  Mediates rent, maintenance, leases, and distributions through
+                  LORs
+                </li>
+                <li>
+                  Reprices yield, transfer cost, and listing status from a live
+                  compliance score
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <footer class="slide-foot"><span></span></footer>
+      </section>
+
+      <!-- 3. The idea — example first -->
+      <section class="slide" data-slide="3" aria-label="The idea">
+        <div class="slide-bg"></div>
+        <header class="topbar">
+          <img class="brand-logo" src="assets/opera-logo.png" alt="Opera Protocol" />
+          <span class="slide-label">Example</span>
+        </header>
+        <div class="slide-body idea">
+          <div>
+            <h2>How this looks in practice</h2>
+            <p class="lede tight" style="margin-bottom: 0.85rem">
+              Example: a Singapore family office tokenizes a solar farm and
+              hires a maintenance company to run it and collect energy revenue.
+            </p>
+            <ul class="idea-points">
+              <li>
+                Month 4: the operator’s parent company hits a
+                <strong>sanctions list</strong>
+              </li>
+              <li>
+                Today: they keep collecting until a human notices and revokes
+                access — <strong>manual, slow, risky</strong>
+              </li>
+              <li>
+                With Opera: their authority
+                <strong>reprices and auto-lists</strong> the same block — a
+                cleaner operator takes over
+              </li>
+            </ul>
+          </div>
+          <div class="idea-art example-flow">
+            <div class="story-card asset-context">
+              <span class="flow-tag">The asset</span>
+              <span class="flow-amt">Solar farm · Malaysia</span>
+              <span class="flow-sub">Tokenized RWA · monthly energy revenue</span>
+            </div>
+            <p class="compare-duo-label">Same event — operator sanctioned</p>
+            <div class="compare-duo">
+              <div class="story-card warn">
+                <span class="flow-tag">Without Opera</span>
+                <span class="flow-amt">Authority stuck</span>
+                <span class="flow-sub">Revoked identity still runs the farm until someone manually pulls the plug</span>
+              </div>
+              <span class="compare-vs" aria-hidden="true">vs</span>
+              <div class="story-card accent">
+                <span class="flow-tag">With Opera</span>
+                <span class="flow-amt">Authority updates itself</span>
+                <span class="flow-sub">Score drops → yield freezes → right auto-lists → new operator steps in</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <footer class="slide-foot"><span></span></footer>
+      </section>
+
+      <!-- 4. Unique -->
+      <section class="slide" data-slide="4" aria-label="Why unique">
+        <div class="slide-bg"></div>
+        <header class="topbar">
+          <img class="brand-logo" src="assets/opera-logo.png" alt="Opera Protocol" />
+          <span class="slide-label">Why unique</span>
+        </header>
+        <div class="slide-body content-slide">
+          <h2>How Opera is different</h2>
+          <p class="lede tight">
+            Most RWA platforms only track ownership. Opera tracks who is
+            currently allowed to operate the asset, and ties that permission to
+            live Cleanverse compliance.
+          </p>
+          <div class="compare-grid">
+            <div class="compare-col">
+              <h3>Traditional RWA</h3>
+              <ul>
+                <li>Ask: who <strong>owns</strong> this asset?</li>
+                <li>Compliance checked <strong>at transfer</strong></li>
+                <li>Delegation is <strong>static</strong></li>
+                <li>Agents only <strong>report</strong></li>
+                <li>Compliance is a <strong>gate</strong></li>
+              </ul>
+            </div>
+            <div class="compare-col opera">
+              <h3>Opera</h3>
+              <ul>
+                <li>Ask: who is currently <strong>authorized to operate</strong> it?</li>
+                <li>Compliance <strong>reprices authority</strong> continuously</li>
+                <li>Authority is <strong>economically alive</strong></li>
+                <li>Agents are <strong>market participants</strong> with staked capital</li>
+                <li>Compliance is a <strong>pricing engine</strong></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <footer class="slide-foot"><span></span></footer>
+      </section>
+
+      <!-- 5. Features -->
+      <section class="slide" data-slide="5" aria-label="Features">
+        <div class="slide-bg"></div>
+        <header class="topbar">
+          <img class="brand-logo" src="assets/opera-logo.png" alt="Opera Protocol" />
+          <span class="slide-label">Features</span>
+        </header>
+        <div class="slide-body">
+          <h2>What Opera is built from</h2>
+          <div class="feat-grid">
+            <article class="feat-card accent">
+              <span class="n">01</span>
+              <h3>Living Operating Rights</h3>
+              <p>
+                On-chain authority over asset operations. Yield, transfer price,
+                and listing status move with the holder’s live compliance score.
+              </p>
+            </article>
+            <article class="feat-card">
+              <span class="n">02</span>
+              <h3>Agent Mandate Market</h3>
+              <p>
+                CVI-verified operators deploy Cleanverse agents to bid for
+                mandates, stake CVA as a compliance bond, and execute autonomously.
+              </p>
+            </article>
+            <article class="feat-card">
+              <span class="n">03</span>
+              <h3>Rights Price Oracle</h3>
+              <p>
+                A continuous index of LOR prices — the first market-determined
+                valuation of compliance quality across an asset class.
+              </p>
+            </article>
+          </div>
+          <div class="mech-row">
+            <div class="mech-pill">
+              <strong>Yield bonding</strong>
+              <small>Score bands gate how much yield is paid vs escrowed</small>
+            </div>
+            <div class="mech-pill">
+              <strong>Transfer pricing</strong>
+              <small>Fees move inversely with compliance quality</small>
+            </div>
+            <div class="mech-pill">
+              <strong>Auto-listing</strong>
+              <small>Score drops → LOR lists itself; protocol self-corrects</small>
+            </div>
+          </div>
+        </div>
+        <footer class="slide-foot"><span></span></footer>
+      </section>
+
+      <!-- 6. Cleanverse -->
+      <section class="slide" data-slide="6" aria-label="Cleanverse integration">
+        <div class="slide-bg"></div>
+        <header class="topbar">
+          <img class="brand-logo" src="assets/opera-logo.png" alt="Opera Protocol" />
+          <div class="partner-stack" aria-label="Partners">
+            <img class="partner-logo cleanverse" src="assets/cleanverse-logo.png" alt="Cleanverse" />
+            <img class="partner-logo monad" src="assets/monad-logo.png" alt="Monad" />
+          </div>
+        </header>
+        <div class="slide-body">
+          <h2>How Cleanverse powers Opera</h2>
+          <p class="lede tight">
+            Opera uses Cleanverse for identity, assets, compliance checks, and
+            agent execution. It runs on Monad for fast score updates and
+            settlement.
+          </p>
+          <div class="integ-grid">
+            <article class="integ-card">
+              <div class="code">CVI</div>
+              <h3>Verified Identity</h3>
+              <p>
+                Tenure, revocation, and jurisdiction feed the score that
+                continuously reprices LORs.
+              </p>
+            </article>
+            <article class="integ-card">
+              <div class="code">CVA</div>
+              <h3>Verified Assets</h3>
+              <p>
+                Sole settlement and stake instrument — clean-money origination by
+                construction.
+              </p>
+            </article>
+            <article class="integ-card">
+              <div class="code">CCP</div>
+              <h3>Protocol checks</h3>
+              <p>
+                Score input, transfer validation, and Travel Rule data on every
+                value move.
+              </p>
+            </article>
+            <article class="integ-card">
+              <div class="code">Agents</div>
+              <h3>Skill Framework</h3>
+              <p>
+                Execution runtime of the Mandate Market — principal verification,
+                spend caps, audit trail.
+              </p>
+            </article>
+            <article class="integ-card">
+              <div class="code">Playground</div>
+              <h3>Rule workbench</h3>
+              <p>
+                Configure score bands, mandate rules, simulate degradation, export
+                CCP reports.
+              </p>
+            </article>
+            <article class="integ-card">
+              <div class="code">Rails · Gateway</div>
+              <h3>Settlement path</h3>
+              <p>
+                End-to-end CVA cash flows with fiat on/off ramps that never break
+                the compliance chain.
+              </p>
+            </article>
+          </div>
+        </div>
+        <footer class="slide-foot"><span></span></footer>
+      </section>
+
+      <!-- 7. Roadmap -->
+      <section class="slide" data-slide="7" aria-label="Roadmap">
+        <div class="slide-bg"></div>
+        <header class="topbar">
+          <img class="brand-logo" src="assets/opera-logo.png" alt="Opera Protocol" />
+          <span class="slide-label">Roadmap</span>
+        </header>
+        <div class="slide-body">
+          <h2>What comes next</h2>
+          <div class="roadmap">
+            <article class="phase">
+              <span class="phase-n">Phase 2</span>
+              <h3>Score sophistication</h3>
+              <ul>
+                <li>Asset-class score weighting</li>
+                <li>Peer cohort benchmarking</li>
+                <li>Portable score-history reputation</li>
+              </ul>
+            </article>
+            <article class="phase">
+              <span class="phase-n">Phase 3</span>
+              <h3>Market maturity</h3>
+              <ul>
+                <li>LOR structured products (CDOs)</li>
+                <li>Oracle-backed compliance lending</li>
+                <li>Cross-chain LOR portability</li>
+              </ul>
+            </article>
+            <article class="phase">
+              <span class="phase-n">Phase 4</span>
+              <h3>Institutional scale</h3>
+              <ul>
+                <li>DAO governance for community assets</li>
+                <li>Insurance priced off LOR scores</li>
+                <li>Sovereign &amp; fund-of-fund mandates</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+        <footer class="slide-foot"><span></span></footer>
+      </section>
+
+      <!-- 8. Close -->
+      <section class="slide" data-slide="8" aria-label="Closing">
+        <div class="slide-bg glow"></div>
+        <header class="topbar">
+          <img class="brand-logo" src="assets/opera-logo.png" alt="Opera Protocol" />
+          <div class="partner-stack" aria-label="Partners">
+            <img class="partner-logo cleanverse" src="assets/cleanverse-logo.png" alt="Cleanverse" />
+            <img class="partner-logo monad" src="assets/monad-logo.png" alt="Monad" />
+          </div>
+        </header>
+        <div class="slide-body center-stage thanks">
+          <h2 class="giant">RWA operations,<br />kept compliant in real time</h2>
+          <p class="slogan">
+            When an operator’s compliance changes, their authority updates with it.
+          </p>
+          <img class="thanks-logo" src="assets/opera-logo.png" alt="Opera Protocol" />
+          <div class="tagline-row">
+            <span>Powered by Cleanverse</span>
+            <span>Built on Monad</span>
+          </div>
+        </div>
+        <footer class="slide-foot"><span></span></footer>
+      </section>
+    </div>
+
+    <nav class="deck-nav" aria-label="Slide navigation">
+      <button type="button" id="prev" aria-label="Previous slide">←</button>
+      <div class="dots" id="dots"></div>
+      <button type="button" id="next" aria-label="Next slide">→</button>
+    </nav>
+
+    <script>
+      (function () {
+        const slides = [...document.querySelectorAll(".slide")];
+        const dots = document.getElementById("dots");
+        const total = slides.length;
+        let i = 0;
+
+        slides.forEach((slide, idx) => {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "dot";
+          b.setAttribute("aria-label", "Go to slide " + (idx + 1));
+          b.addEventListener("click", () => go(idx));
+          dots.appendChild(b);
+
+          const foot = slide.querySelector(".slide-foot > span");
+          if (foot) foot.textContent = `${idx + 1} / ${total}`;
+        });
+
+        function go(n) {
+          i = Math.max(0, Math.min(slides.length - 1, n));
+          slides.forEach((s, idx) => s.classList.toggle("is-active", idx === i));
+          [...dots.children].forEach((d, idx) =>
+            d.classList.toggle("is-active", idx === i),
+          );
+        }
+
+        document.getElementById("prev").addEventListener("click", () => go(i - 1));
+        document.getElementById("next").addEventListener("click", () => go(i + 1));
+
+        window.addEventListener("keydown", (e) => {
+          if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") {
+            e.preventDefault();
+            go(i + 1);
+          } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
+            e.preventDefault();
+            go(i - 1);
+          } else if (e.key === "Home") go(0);
+          else if (e.key === "End") go(slides.length - 1);
+        });
+
+        let touchX = null;
+        document.addEventListener(
+          "touchstart",
+          (e) => {
+            touchX = e.changedTouches[0].screenX;
+          },
+          { passive: true },
+        );
+        document.addEventListener(
+          "touchend",
+          (e) => {
+            if (touchX == null) return;
+            const dx = e.changedTouches[0].screenX - touchX;
+            if (Math.abs(dx) > 50) go(dx < 0 ? i + 1 : i - 1);
+            touchX = null;
+          },
+          { passive: true },
+        );
+
+        go(0);
+      })();
+    </script>
+  </body>
+</html>
