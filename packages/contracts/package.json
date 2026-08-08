@@ -1,0 +1,10 @@
+{
+  "name": "@opera/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test": "forge test -vv",
+    "build": "forge build",
+    "deploy": "forge script script/Deploy.s.sol:Deploy --rpc-url $MONAD_RPC_URL --broadcast --private-key $DEPLOYER_PRIVATE_KEY"
+  }
+}
