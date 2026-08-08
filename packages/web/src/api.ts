@@ -220,4 +220,47 @@ export function autoListLor(lorId: string, listPrice?: string) {
   return apiAuthPost<{ ok: boolean; lorId: string; tx: string }>(`/v1/lors/${lorId}/auto-list`, { listPrice });
 }
 
+/* ——— Cast demo (role-signed dashboard actions) ——— */
+
+export type CastTx = { label: string; hash: string };
+
+export type CastRole = {
+  role: string;
+  address: string;
+  label?: string;
+  customerId?: string | null;
+};
+
+export type CastSnapshot = {
+  runId: string;
+  status: string;
+  roles: CastRole[];
+  ids: Record<string, string | number | null | undefined>;
+  steps: Array<{ step: string; status: string; error?: string | null }>;
+  suggestedStage: string;
+  recentTxs: CastTx[];
+};
+
+export type CastActResult = {
+  ok: true;
+  role: string | null;
+  action: string;
+  summary: string;
+  actors: { role: string; address: string }[];
+  txs: CastTx[];
+  ids?: Record<string, string>;
+  run: DemoRun;
+};
+
+export function getCast(runId: string) {
+  return apiGet<CastSnapshot>(`/demo/${runId}/cast`);
+}
+
+export function castAct(
+  runId: string,
+  body: { role?: string; action: string; args?: Record<string, unknown> },
+) {
+  return apiPost<CastActResult>(`/demo/${runId}/act`, body);
+}
+
 export { deployments };

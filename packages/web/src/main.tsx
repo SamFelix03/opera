@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { AppKitProvider } from "./config/appkit";
 import { SiweProvider } from "./hooks/useSiweSession";
+import { CastProvider } from "./hooks/useCast";
 import { App } from "./App";
 import "./styles.css";
 
@@ -11,7 +12,9 @@ createRoot(document.getElementById("root")!).render(
     <AppKitProvider>
       <SiweProvider>
         <BrowserRouter>
-          <App />
+          <CastProvider>
+            <App />
+          </CastProvider>
         </BrowserRouter>
       </SiweProvider>
     </AppKitProvider>

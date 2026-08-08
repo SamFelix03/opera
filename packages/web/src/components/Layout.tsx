@@ -1,6 +1,7 @@
 import { Link, NavLink } from "react-router-dom";
 import type { ReactNode } from "react";
 import { WalletBar, SetupBanner } from "./WalletBar";
+import { CastBar } from "./CastBar";
 import { walletConfigured } from "../config/appkit";
 
 const platformLinks = [
@@ -36,13 +37,14 @@ export function Layout({ children }: { children: ReactNode }) {
                 to="/demo"
                 className={({ isActive }) => `nav-pill-btn demo${isActive ? " active" : ""}`}
               >
-                Demo
+                Cast
               </NavLink>
             </nav>
           </div>
           <WalletBar />
         </div>
       </header>
+      <CastBar />
       <main className="main">{children}</main>
       <footer className="foot">
         <span>Built on Monad · Compliance by Cleanverse (CVI · CVA · A-Pass)</span>

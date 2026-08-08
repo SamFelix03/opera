@@ -1591,3 +1591,252 @@ pre {
     flex: 1 1 8rem;
   }
 }
+
+/* ——— Demo cast ——— */
+.cast-bar {
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--navy) 6%, var(--surface, #fff));
+}
+
+.cast-bar-inner {
+  max-width: var(--content-max, 72rem);
+  margin: 0 auto;
+  padding: 0.55rem var(--gutter, 1.25rem);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cast-bar-lead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.65rem;
+  align-items: baseline;
+}
+
+.cast-bar-kicker {
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.cast-bar-acting {
+  font-size: 0.92rem;
+}
+
+.cast-bar-addr {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.cast-signed-pill {
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.35rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--navy) 10%, transparent);
+}
+
+.cast-role-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.cast-bar-trail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.cast-bar-error,
+.cast-bar-last {
+  max-width: var(--content-max, 72rem);
+  margin: 0 auto;
+  padding: 0.35rem var(--gutter, 1.25rem) 0.55rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 0.85rem;
+}
+
+.cast-bar-error {
+  color: var(--danger);
+}
+
+.cast-tx-link {
+  font-size: 0.78rem;
+  color: var(--navy);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.cast-tx-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.35rem;
+}
+
+.cast-stage-board {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.75rem;
+}
+
+.cast-stage {
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 0.85rem;
+  background: color-mix(in srgb, var(--navy) 3%, transparent);
+}
+
+.cast-stage-done {
+  border-color: color-mix(in srgb, #1a7f4b 45%, var(--border));
+}
+
+.cast-stage-ready {
+  border-color: var(--navy);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--navy) 25%, transparent);
+}
+
+.cast-stage-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  align-items: flex-start;
+  margin-bottom: 0.35rem;
+}
+
+.cast-stage-badge {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.3rem;
+  border: 1px solid var(--border);
+}
+
+.cast-stage-badge.done {
+  background: color-mix(in srgb, #1a7f4b 15%, transparent);
+}
+
+.cast-stage-badge.ready {
+  background: color-mix(in srgb, var(--navy) 12%, transparent);
+}
+
+.acting-as-cue.cast-aware {
+  border-color: var(--navy);
+}
+
+.cast-result-panel {
+  margin-bottom: 1.25rem;
+}
+
+.cast-briefing {
+  margin: 0 0 1.5rem;
+  padding: 1.25rem 1.35rem 1.35rem;
+  border-radius: 0.85rem;
+  border: 1px solid var(--border);
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--navy) 8%, transparent),
+      color-mix(in srgb, var(--navy) 2%, transparent) 55%,
+      transparent
+    );
+}
+
+.cast-briefing-head {
+  max-width: 42rem;
+  margin-bottom: 1rem;
+}
+
+.cast-briefing-head h2 {
+  margin: 0.2rem 0 0.45rem;
+  font-family: var(--font-display, inherit);
+  font-size: 1.45rem;
+}
+
+.cast-briefing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 0.75rem;
+}
+
+.cast-info-block {
+  padding: 0.9rem 1rem;
+  border-radius: 0.7rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface, #fff) 88%, transparent);
+}
+
+.cast-info-tag {
+  display: inline-block;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.35rem;
+}
+
+.cast-info-block h3 {
+  margin: 0 0 0.4rem;
+  font-size: 1.05rem;
+}
+
+.cast-info-block p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: color-mix(in srgb, var(--ink, #111) 82%, transparent);
+}
+
+.cast-info-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+.cast-players-panel {
+  margin-bottom: 1.25rem;
+}
+
+.cast-players-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr));
+  gap: 0.65rem;
+  margin-top: 0.75rem;
+}
+
+.cast-player-card {
+  padding: 0.85rem 0.9rem;
+  border-radius: 0.65rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--navy) 4%, transparent);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.cast-player-card p {
+  margin: 0;
+  font-size: 0.85rem;
+  flex: 1;
+}
+
+.lor-card.selected {
+  border-color: var(--navy);
+  box-shadow: 0 0 0 1px var(--navy);
+}
