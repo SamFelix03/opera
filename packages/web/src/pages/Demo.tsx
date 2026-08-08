@@ -2,42 +2,48 @@ import { Link } from "react-router-dom";
 import { EventFeed } from "../components/EventFeed";
 import { ActionChip, CopyButton } from "../components/CopyButton";
 import { CastActionButton } from "../components/CastActionButton";
-import { CleanverseStrip } from "../components/CleanverseStrip";
 import { EXPLORER_TX, ROLE_LABELS, roleLabel, useCast } from "../hooks/useCast";
 import { shortAddr } from "../lib/format";
 import { FAUCET_URL } from "../config/monad";
-import { deployments } from "../api";
 
-const BRIEFING = [
-  {
-    tag: "Company",
-    title: "Opera Protocol",
-    body: "Opera is a compliance-native RWA platform on Monad. It turns “who may operate this asset” into an on-chain Living Operating Right (LOR) — hired through mandate auctions, bonded with Cleanverse oCVA, and repriced when compliance breaks.",
-  },
-  {
-    tag: "Use case",
-    title: "Malaysian solar farm",
-    body: "A Singapore family office owns a tokenized solar farm. Energy and maintenance operators run day-to-day work. When sanctions freeze an operator’s A-Pass, their score collapses, the LOR auto-lists on Market, and a clean replacement acquires it — with a regulator-ready audit trail.",
-  },
-  {
-    tag: "Stack",
-    title: "Monad + Cleanverse",
-    body: "Settlement and stakes use Cleanverse oCVA. Identity and freezes use A-Pass / CVI. Scores and LORs live on Monad testnet contracts. Explorers link every cast-signed transaction so you can prove what happened.",
-  },
-  {
-    tag: "How to demo",
-    title: "Cast bar, not wallet switching",
-    body: "Seed once to allocate role wallets. Pick Acting as Owner / Energy / Maint / Replacement / Regulator in the cast bar, then use Owner, Operator, Market, Rules, and Audit. The backend signs as that role — you do not connect each MetaMask account.",
-  },
-] as const;
-
+/** Plain-language cast for the solar-farm story */
 const CAST_PLAYERS = [
-  { role: "owner", job: "Issues LORs, publishes auctions, awards winners" },
-  { role: "energyOp", job: "Bids, holds energy LOR, distributes revenue" },
-  { role: "maintOp", job: "Maintenance operator — freeze target in the story" },
-  { role: "replacement", job: "Acquires the distressed LOR on Market" },
-  { role: "regulator", job: "Freezes / activates A-Pass, exports the audit pack" },
-  { role: "investor", job: "Stakeholder lens (notifications / capital side)" },
+  {
+    role: "owner",
+    title: "Asset owner",
+    where: "Singapore family office",
+    job: "Owns the solar farm. Hires operators and decides who gets the job.",
+  },
+  {
+    role: "energyOp",
+    title: "Energy operator",
+    where: "Day-to-day ops",
+    job: "Collects and distributes electricity revenue from the farm.",
+  },
+  {
+    role: "maintOp",
+    title: "Maintenance operator",
+    where: "Day-to-day ops",
+    job: "Keeps panels and equipment running. This is who gets flagged in the freeze story.",
+  },
+  {
+    role: "replacement",
+    title: "Replacement operator",
+    where: "Standby",
+    job: "Steps in when maintenance fails compliance and buys the operating right on the market.",
+  },
+  {
+    role: "regulator",
+    title: "Regulator",
+    where: "MAS examiner lens",
+    job: "Can freeze a bad actor and download the audit trail at the end.",
+  },
+  {
+    role: "investor",
+    title: "Investor",
+    where: "Capital side",
+    job: "Cares that operators stay compliant so the asset keeps paying.",
+  },
 ] as const;
 
 const STAGES: {
@@ -146,8 +152,8 @@ export function DemoPage() {
           <p className="eyebrow">PRD §8 · Solar farm</p>
           <h1>Cast HQ</h1>
           <p className="lede">
-            Briefing room for the Opera demo: what the company does, who the cast is, and how to
-            drive the full compliance lifecycle from the dashboard desks.
+            Seed the cast, pick who you are acting as, then run the story from Owner, Operator,
+            Market, Rules, and Audit.
           </p>
         </div>
         <div className="page-actions">
@@ -170,54 +176,26 @@ export function DemoPage() {
         </div>
       </header>
 
-      <section className="cast-briefing" aria-label="Company and use case">
-        <div className="cast-briefing-head">
-          <p className="eyebrow">Context</p>
-          <h2>What you are looking at</h2>
-          <p className="muted">
-            Opera prices operating authority with Cleanverse compliance. This cast walks a real
-            RWA story — hire, earn, freeze, replace, prove — without a sequential wizard.
-          </p>
-        </div>
-        <div className="cast-briefing-grid">
-          {BRIEFING.map((b) => (
-            <article key={b.tag} className="cast-info-block">
-              <span className="cast-info-tag">{b.tag}</span>
-              <h3>{b.title}</h3>
-              <p>{b.body}</p>
-            </article>
-          ))}
-        </div>
-        <div className="cast-info-meta">
-          <div className="kv-item">
-            <span className="kv-label">Chain</span>
-            <span className="kv-value">Monad testnet · {deployments.chainId}</span>
-          </div>
-          <div className="kv-item">
-            <span className="kv-label">Settlement</span>
-            <span className="kv-value">
-              {deployments.settlementSymbol ?? "oCVA"} (Cleanverse A-Token)
-            </span>
-          </div>
-          <div className="kv-item">
-            <span className="kv-label">Asset story</span>
-            <span className="kv-value">SG family office · MY solar farm</span>
-          </div>
-        </div>
+      <section className="section-callout cast-story" role="note">
+        <strong>The story</strong>
+        <p>
+          A Singapore family office owns a <em>Malaysian solar farm</em>. They hire two operators:
+          one to handle energy revenue, one to handle maintenance. If the maintenance operator gets
+          sanctioned, their licence is forced onto the market and a clean replacement can buy it.
+          The regulator can pull a signed paper trail at the end.
+        </p>
       </section>
 
-      <CleanverseStrip />
-
-      <section className="panel cast-players-panel" aria-label="Cast players">
-        <h2>Who is in the cast</h2>
+      <section className="panel cast-players-panel" aria-label="Who is who">
+        <h2>Who is who</h2>
         <p className="muted" style={{ marginTop: 0 }}>
-          Each chip in the cast bar is one of these roles. Selecting a role makes desk actions
-          sign as that wallet on the backend.
+          These are the people in this demo. Use the cast bar (or Act as) to sign as one of them.
         </p>
         <div className="cast-players-grid">
           {CAST_PLAYERS.map((p) => (
             <div className="cast-player-card" key={p.role}>
-              <strong>{ROLE_LABELS[p.role] ?? p.role}</strong>
+              <strong>{p.title}</strong>
+              <span className="cast-player-where">{p.where}</span>
               <p className="muted">{p.job}</p>
               {cast.active ? (
                 <button
