@@ -3,9 +3,11 @@ import type { DemoEvent } from "../types/demo";
 import { ActionChip, CopyButton } from "./CopyButton";
 import { shortAddr } from "../lib/format";
 
+const EXPLORER_TX = "https://testnet.monadvision.com/tx";
+
 export function EventFeed({
   events,
-  empty = "No events yet — bootstrap a demo run to begin.",
+  empty = "No events yet — seed a cast to begin.",
 }: {
   events: DemoEvent[];
   empty?: string;
@@ -21,6 +23,7 @@ export function EventFeed({
         const when = ev.createdAt ?? ev.ts ?? "";
         const refs = extractRefs(ev);
         const summary = summarizeEvent(ev, refs);
+        const txs = extractTxs(ev.payload);
         return (
           <li key={key}>
             <div className="event-meta">
@@ -29,6 +32,21 @@ export function EventFeed({
               {when ? <time dateTime={when}>{formatWhen(when)}</time> : null}
             </div>
             {ev.message ? <p>{ev.message}</p> : summary ? <p>{summary}</p> : null}
+            {txs.length > 0 ? (
+              <div className="cast-tx-list">
+                {txs.map((tx) => (
+                  <a
+                    key={tx.hash}
+                    className="cast-tx-link mono"
+                    href={`${EXPLORER_TX}/${tx.hash}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {tx.label}: {tx.hash.slice(0, 12)}…↗
+                  </a>
+                ))}
+              </div>
+            ) : null}
             {refs.actions.length > 0 ? (
               <div className="chip-row event-actions">{refs.actions}</div>
             ) : null}
@@ -51,6 +69,29 @@ type Refs = {
   mandateIds: string[];
   actions: ReactNode[];
 };
+
+function extractTxs(payload: unknown): { label: string; hash: string }[] {
+  if (payload == null || typeof payload !== "object") return [];
+  const obj = payload as Record<string, unknown>;
+  const out: { label: string; hash: string }[] = [];
+  if (Array.isArray(obj.txs)) {
+    for (const t of obj.txs) {
+      if (t && typeof t === "object" && "hash" in t) {
+        const hash = String((t as { hash: string }).hash);
+        if (hash.startsWith("0x")) {
+          out.push({ label: String((t as { label?: string }).label ?? "tx"), hash });
+        }
+      }
+    }
+  }
+  for (const key of ["tx", "listTx", "acquireTx", "distributeTx", "hash"]) {
+    const h = obj[key];
+    if (typeof h === "string" && h.startsWith("0x") && h.length >= 66) {
+      out.push({ label: key, hash: h });
+    }
+  }
+  return out;
+}
 
 function extractRefs(ev: DemoEvent): Refs {
   const addresses = new Set<string>();

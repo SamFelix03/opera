@@ -9,7 +9,9 @@ import {
   normalizeRoles,
 } from "../api";
 import { EventFeed } from "../components/EventFeed";
+import { CastActionButton } from "../components/CastActionButton";
 import { SubTabs } from "../components/SubTabs";
+import { useCast } from "../hooks/useCast";
 import type { DemoEvent } from "../types/demo";
 import { shortAddr } from "../lib/format";
 
@@ -32,6 +34,7 @@ const TABS = [
 
 export function AuditPage() {
   const { address } = useAccount();
+  const cast = useCast();
   const [tab, setTab] = useState<AuditTab>("lifecycle");
   const [events, setEvents] = useState<DemoEvent[]>([]);
   const [raw, setRaw] = useState<AuditRow[]>([]);
@@ -39,7 +42,7 @@ export function AuditPage() {
   const [busy, setBusy] = useState(false);
   const [filterAddr, setFilterAddr] = useState(address ?? "");
   const [demoRoleChips, setDemoRoleChips] = useState<{ label: string; value: string }[]>([]);
-  const runId = localStorage.getItem(RUN_KEY);
+  const runId = cast.runId ?? localStorage.getItem(RUN_KEY);
 
   useEffect(() => {
     if (!runId) {
@@ -118,6 +121,9 @@ export function AuditPage() {
           <button type="button" className="btn secondary" onClick={() => void load()}>
             Refresh
           </button>
+          {cast.active ? (
+            <CastActionButton action="export" role="regulator" label="Build export (cast)" />
+          ) : null}
           <button
             type="button"
             className="btn"
@@ -153,8 +159,8 @@ export function AuditPage() {
       {tab === "lifecycle" ? (
         <section className="panel feed-panel">
           <EventFeed
-            events={events}
-            empty="No lifecycle events yet. Run Demo or execute platform actions."
+            events={cast.active && cast.events.length ? cast.events : events}
+            empty="No lifecycle events yet. Seed a cast or execute platform actions."
           />
         </section>
       ) : (

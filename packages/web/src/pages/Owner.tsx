@@ -9,6 +9,8 @@ import { NotificationList } from "../components/NotificationList";
 import { CleanverseStrip, RoleGuide } from "../components/CleanverseStrip";
 import { Dialog } from "../components/Dialog";
 import { ActingAsCue } from "../components/ActingAsCue";
+import { CastActionButton } from "../components/CastActionButton";
+import { useCast } from "../hooks/useCast";
 import { usePublishMandate, useAwardMandate } from "../hooks/useOperaWrites";
 import { useSiweSession } from "../hooks/useSiweSession";
 import { useAccount, useReadContract } from "wagmi";
@@ -58,6 +60,7 @@ function isOwnerTab(v: string | null): v is OwnerTab {
 
 export function OwnerPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const cast = useCast();
   const tabParam = searchParams.get("tab");
   const tab: OwnerTab = isOwnerTab(tabParam) ? tabParam : "overview";
 
@@ -96,10 +99,14 @@ export function OwnerPage() {
 
       <SubTabs tabs={TABS} active={tab} onChange={setTab} />
 
-      <RequireWallet label="Connect your owner wallet to continue">
-        <SiweStatus />
+      {cast.active ? (
         <OwnerBody tab={tab} />
-      </RequireWallet>
+      ) : (
+        <RequireWallet label="Connect your owner wallet to continue">
+          <SiweStatus />
+          <OwnerBody tab={tab} />
+        </RequireWallet>
+      )}
     </div>
   );
 }
@@ -107,6 +114,7 @@ export function OwnerPage() {
 function OwnerBody({ tab }: { tab: OwnerTab }) {
   const { address } = useAccount();
   const siwe = useSiweSession();
+  const cast = useCast();
   const [searchParams] = useSearchParams();
   const holderParam = searchParams.get("holder");
   const mandateParam = searchParams.get("mandateId");
@@ -216,11 +224,19 @@ function OwnerBody({ tab }: { tab: OwnerTab }) {
           /* ignore */
         }
       }
+      if (cast.active) {
+        for (const r of cast.roles) {
+          if (!r.address) continue;
+          if (/operator|maint|energy|replacement/i.test(r.role)) {
+            map.set(r.address.toLowerCase(), r.label ?? r.role);
+          }
+        }
+      }
       setOperatorCandidates(
         [...map.entries()].map(([addr, label]) => ({ address: addr, label })).slice(0, 32),
       );
     })();
-  }, [publish.isConfirmed, award.isConfirmed]);
+  }, [publish.isConfirmed, award.isConfirmed, cast.active, cast.roles]);
 
   useEffect(() => {
     if (tab !== "mandates" || !mandateParam || !mandates) return;
@@ -264,8 +280,10 @@ function OwnerBody({ tab }: { tab: OwnerTab }) {
     }
   }
 
+  const castOwner = cast.roles.find((r) => r.role === "owner")?.address;
+  const viewer = cast.active ? castOwner : address;
   const mine = (mandates ?? []).filter(
-    (m) => m.publisher?.toLowerCase() === address?.toLowerCase(),
+    (m) => m.publisher?.toLowerCase() === viewer?.toLowerCase(),
   );
   const openMine = mine.filter((m) => m.open && !m.awarded);
 
@@ -359,14 +377,25 @@ function OwnerBody({ tab }: { tab: OwnerTab }) {
           <option value="maintenance">maintenance</option>
         </select>
         <div className="row-actions">
-          <button
-            type="button"
-            className="btn"
-            disabled={mintBusy || !mintHolder || !siwe.authenticated}
-            onClick={() => void onMintLor()}
-          >
-            {mintBusy ? "Minting…" : "Mint LOR"}
-          </button>
+          {cast.active ? (
+            <CastActionButton
+              action="mintLor"
+              role="owner"
+              requireRole="owner"
+              args={{ holder: mintHolder, scope: mintScope }}
+              label="Mint LOR (cast)"
+              disabled={!mintHolder}
+            />
+          ) : (
+            <button
+              type="button"
+              className="btn"
+              disabled={mintBusy || !mintHolder || !siwe.authenticated}
+              onClick={() => void onMintLor()}
+            >
+              {mintBusy ? "Minting…" : "Mint LOR"}
+            </button>
+          )}
         </div>
         {mintResult ? (
           <div className={`alert ${mintResult.startsWith("LOR #") ? "success" : "error"}`}>
@@ -400,24 +429,34 @@ function OwnerBody({ tab }: { tab: OwnerTab }) {
               onChange={(e) => setPublishStake(e.target.value)}
             />
             <div className="row-actions">
-              <TxButton
-                label="Publish"
-                onClick={() =>
-                  publish.publish({
-                    assetId: BigInt(deployments.assetId ?? 1),
-                    scope: keccak256(toBytes(publishScope)),
-                    minScore: 80n,
-                    jurisdictionRoot: keccak256(toBytes("SG")),
-                    stakeAmount: parseUnits(publishStake, 6),
-                    maxSpendPerTx: parseUnits("200000", 6),
-                  })
-                }
-                isPending={publish.isPending}
-                isConfirming={publish.isConfirming}
-                isConfirmed={publish.isConfirmed}
-                hash={publish.hash}
-                error={publish.error}
-              />
+              {cast.active ? (
+                <CastActionButton
+                  action="publishMandate"
+                  role="owner"
+                  requireRole="owner"
+                  args={{ scope: publishScope, stake: publishStake }}
+                  label="Publish (cast)"
+                />
+              ) : (
+                <TxButton
+                  label="Publish"
+                  onClick={() =>
+                    publish.publish({
+                      assetId: BigInt(deployments.assetId ?? 1),
+                      scope: keccak256(toBytes(publishScope)),
+                      minScore: 80n,
+                      jurisdictionRoot: keccak256(toBytes("SG")),
+                      stakeAmount: parseUnits(publishStake, 6),
+                      maxSpendPerTx: parseUnits("200000", 6),
+                    })
+                  }
+                  isPending={publish.isPending}
+                  isConfirming={publish.isConfirming}
+                  isConfirmed={publish.isConfirmed}
+                  hash={publish.hash}
+                  error={publish.error}
+                />
+              )}
             </div>
           </section>
 
@@ -552,18 +591,34 @@ function OwnerBody({ tab }: { tab: OwnerTab }) {
               )}
 
               <div className="row-actions" style={{ marginTop: "1rem" }}>
-                <TxButton
-                  label={selectedBidder ? `Award to ${shortAddr(selectedBidder)}` : "Select a bidder"}
-                  onClick={() =>
-                    award.award(BigInt(selectedMandate.mandateId), selectedBidder as Hex)
-                  }
-                  isPending={award.isPending}
-                  isConfirming={award.isConfirming}
-                  isConfirmed={award.isConfirmed}
-                  hash={award.hash}
-                  error={award.error}
-                  disabled={!selectedBidder}
-                />
+                {cast.active ? (
+                  <CastActionButton
+                    action="award"
+                    role="owner"
+                    requireRole="owner"
+                    args={{
+                      mandateId: selectedMandate.mandateId,
+                      winner: selectedBidder,
+                    }}
+                    label={
+                      selectedBidder ? `Award to ${shortAddr(selectedBidder)} (cast)` : "Select a bidder"
+                    }
+                    disabled={!selectedBidder}
+                  />
+                ) : (
+                  <TxButton
+                    label={selectedBidder ? `Award to ${shortAddr(selectedBidder)}` : "Select a bidder"}
+                    onClick={() =>
+                      award.award(BigInt(selectedMandate.mandateId), selectedBidder as Hex)
+                    }
+                    isPending={award.isPending}
+                    isConfirming={award.isConfirming}
+                    isConfirmed={award.isConfirmed}
+                    hash={award.hash}
+                    error={award.error}
+                    disabled={!selectedBidder}
+                  />
+                )}
               </div>
             </>
           ) : null}

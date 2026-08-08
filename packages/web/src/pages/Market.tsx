@@ -7,6 +7,8 @@ import { TxButton } from "../components/TxButton";
 import { ScoreBadge } from "../components/ScoreBadge";
 import { CleanverseStrip, RoleGuide } from "../components/CleanverseStrip";
 import { Dialog } from "../components/Dialog";
+import { CastActionButton } from "../components/CastActionButton";
+import { useCast, roleLabel } from "../hooks/useCast";
 import { useAcquireLOR, useApproveToken } from "../hooks/useOperaWrites";
 import { addresses, lorAbi, scoreAbi } from "../lib/contracts";
 import { apiGet, deployments } from "../api";
@@ -49,6 +51,7 @@ export function MarketPage() {
   const acquire = useAcquireLOR();
   const approve = useApproveToken();
   const { address } = useAccount();
+  const cast = useCast();
 
   const { data: buyerScore } = useReadContract({
     address: addresses.ScoreStore,
@@ -291,50 +294,65 @@ export function MarketPage() {
                 </span>
               </div>
             </div>
-            <RequireWallet label="Connect wallet to acquire">
-              <>
-                {buyerScore != null ? (
-                  <div className="chip-row" style={{ margin: "0.85rem 0" }}>
-                    <ScoreBadge score={Number(buyerScore)} label="Your score" />
-                    {!scoreOk ? (
-                      <span className="muted" style={{ fontSize: "0.85rem", color: "var(--warn)" }}>
-                        Below minimum — acquire may revert
-                      </span>
-                    ) : null}
+            {cast.active ? (
+              <div style={{ marginTop: "0.85rem" }}>
+                <p className="muted" style={{ fontSize: "0.85rem" }}>
+                  Cast acquire signs as {roleLabel(cast.selectedRole)}. Select{" "}
+                  <strong>Replacement operator</strong> in the cast bar.
+                </p>
+                <CastActionButton
+                  action="acquire"
+                  requireRole="replacement"
+                  args={{ lorId: selectedLor.lorId }}
+                  label={`Acquire LOR #${selectedLor.lorId} (cast)`}
+                />
+              </div>
+            ) : (
+              <RequireWallet label="Connect wallet to acquire">
+                <>
+                  {buyerScore != null ? (
+                    <div className="chip-row" style={{ margin: "0.85rem 0" }}>
+                      <ScoreBadge score={Number(buyerScore)} label="Your score" />
+                      {!scoreOk ? (
+                        <span className="muted" style={{ fontSize: "0.85rem", color: "var(--warn)" }}>
+                          Below minimum — acquire may revert
+                        </span>
+                      ) : null}
+                    </div>
+                  ) : null}
+                  <div className="row-actions">
+                    <TxButton
+                      label={
+                        approveAmount != null
+                          ? `Approve ${formatUnits6(approveAmount)} oCVA`
+                          : "Approve (no price)"
+                      }
+                      onClick={() => {
+                        if (approveAmount == null) return;
+                        approve.approve(addresses.LORRegistry, approveAmount);
+                      }}
+                      isPending={approve.isPending}
+                      isConfirming={approve.isConfirming}
+                      isConfirmed={approve.isConfirmed}
+                      hash={approve.hash}
+                      error={approve.error}
+                      className="btn secondary"
+                      disabled={approveAmount == null}
+                    />
+                    <TxButton
+                      label="Acquire"
+                      onClick={() => acquire.acquire(BigInt(selectedLor.lorId))}
+                      isPending={acquire.isPending}
+                      isConfirming={acquire.isConfirming}
+                      isConfirmed={acquire.isConfirmed}
+                      hash={acquire.hash}
+                      error={acquire.error}
+                      disabled={approveAmount == null}
+                    />
                   </div>
-                ) : null}
-                <div className="row-actions">
-                  <TxButton
-                    label={
-                      approveAmount != null
-                        ? `Approve ${formatUnits6(approveAmount)} oCVA`
-                        : "Approve (no price)"
-                    }
-                    onClick={() => {
-                      if (approveAmount == null) return;
-                      approve.approve(addresses.LORRegistry, approveAmount);
-                    }}
-                    isPending={approve.isPending}
-                    isConfirming={approve.isConfirming}
-                    isConfirmed={approve.isConfirmed}
-                    hash={approve.hash}
-                    error={approve.error}
-                    className="btn secondary"
-                    disabled={approveAmount == null}
-                  />
-                  <TxButton
-                    label="Acquire"
-                    onClick={() => acquire.acquire(BigInt(selectedLor.lorId))}
-                    isPending={acquire.isPending}
-                    isConfirming={acquire.isConfirming}
-                    isConfirmed={acquire.isConfirmed}
-                    hash={acquire.hash}
-                    error={acquire.error}
-                    disabled={approveAmount == null}
-                  />
-                </div>
-              </>
-            </RequireWallet>
+                </>
+              </RequireWallet>
+            )}
             {acquire.isConfirmed ? (
               <div className="alert success" style={{ marginTop: "0.85rem" }}>
                 Acquired. You can close this dialog.

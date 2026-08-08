@@ -10,6 +10,8 @@ import { ScoreBadge, YieldBand, ApassStatus } from "../components/ScoreBadge";
 import { CleanverseStrip, RoleGuide } from "../components/CleanverseStrip";
 import { Dialog } from "../components/Dialog";
 import { ActingAsCue } from "../components/ActingAsCue";
+import { CastActionButton } from "../components/CastActionButton";
+import { useCast, roleLabel } from "../hooks/useCast";
 import {
   useBidMandate,
   useDistributeRevenue,
@@ -67,6 +69,7 @@ function isOpTab(v: string | null): v is OpTab {
 
 export function OperatorPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const cast = useCast();
   const tabParam = searchParams.get("tab");
   const tab: OpTab = isOpTab(tabParam) ? tabParam : "overview";
 
@@ -104,10 +107,14 @@ export function OperatorPage() {
 
       <SubTabs tabs={TABS} active={tab} onChange={setTab} />
 
-      <RequireWallet label="Connect your operator wallet to continue">
-        <SiweStatus />
+      {cast.active ? (
         <OperatorBody tab={tab} />
-      </RequireWallet>
+      ) : (
+        <RequireWallet label="Connect your operator wallet to continue">
+          <SiweStatus />
+          <OperatorBody tab={tab} />
+        </RequireWallet>
+      )}
     </div>
   );
 }
@@ -115,6 +122,7 @@ export function OperatorPage() {
 function OperatorBody({ tab }: { tab: OpTab }) {
   const { address } = useAccount();
   const siwe = useSiweSession();
+  const cast = useCast();
   const [searchParams] = useSearchParams();
   const mandateParam = searchParams.get("mandateId");
   const [me, setMe] = useState<Awaited<ReturnType<typeof getMe>> | null>(null);
@@ -277,22 +285,48 @@ function OperatorBody({ tab }: { tab: OpTab }) {
             Next: open Bid to stake oCVA on a mandate, or check Portfolio for LORs you already hold.
           </p>
           <div className="row-actions" style={{ marginTop: "0.85rem" }}>
-            <button
-              type="button"
-              className="btn secondary"
-              disabled={apassBusy || !siwe.authenticated}
-              onClick={() => void onEnsureApass()}
-            >
-              {apassBusy ? "Ensuring…" : "Ensure A-Pass"}
-            </button>
-            <button
-              type="button"
-              className="btn secondary"
-              disabled={scoreBusy || !siwe.authenticated}
-              onClick={() => void onPushScore()}
-            >
-              {scoreBusy ? "Pushing…" : "Push score on-chain"}
-            </button>
+            {cast.active ? (
+              <>
+                <CastActionButton
+                  action="ensureApass"
+                  requireRole={["energyOp", "maintOp", "replacement"]}
+                  label="Ensure A-Pass (cast)"
+                  className="btn secondary"
+                />
+                <CastActionButton
+                  action="pushScore"
+                  requireRole={["energyOp", "maintOp", "replacement"]}
+                  label="Push score (cast)"
+                  className="btn secondary"
+                />
+                <CastActionButton
+                  action="freeze"
+                  role="regulator"
+                  args={{ targetRole: cast.selectedRole ?? "maintOp" }}
+                  label="Freeze selected (as regulator)"
+                  className="btn ghost"
+                />
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  className="btn secondary"
+                  disabled={apassBusy || !siwe.authenticated}
+                  onClick={() => void onEnsureApass()}
+                >
+                  {apassBusy ? "Ensuring…" : "Ensure A-Pass"}
+                </button>
+                <button
+                  type="button"
+                  className="btn secondary"
+                  disabled={scoreBusy || !siwe.authenticated}
+                  onClick={() => void onPushScore()}
+                >
+                  {scoreBusy ? "Pushing…" : "Push score on-chain"}
+                </button>
+              </>
+            )}
           </div>
           {actionMsg ? (
             <div
@@ -402,34 +436,46 @@ function OperatorBody({ tab }: { tab: OpTab }) {
             </div>
           ) : null}
           <div className="row-actions" style={{ marginTop: "1rem" }}>
-            <TxButton
-              label={
-                stakeApproveAmount != null
-                  ? `Approve ${formatUnits6(stakeApproveAmount)} oCVA`
-                  : "Approve (no stake)"
-              }
-              onClick={() => {
-                if (stakeApproveAmount == null) return;
-                approve.approve(addresses.MandateRegistry, stakeApproveAmount);
-              }}
-              isPending={approve.isPending}
-              isConfirming={approve.isConfirming}
-              isConfirmed={approve.isConfirmed}
-              hash={approve.hash}
-              error={approve.error}
-              className="btn secondary"
-              disabled={stakeApproveAmount == null}
-            />
-            <TxButton
-              label="Submit bid"
-              onClick={() => bid.bid(BigInt(bidId))}
-              isPending={bid.isPending}
-              isConfirming={bid.isConfirming}
-              isConfirmed={bid.isConfirmed}
-              hash={bid.hash}
-              error={bid.error}
-              disabled={!bidId || stakeApproveAmount == null}
-            />
+            {cast.active ? (
+              <CastActionButton
+                action="bid"
+                requireRole={["energyOp", "maintOp", "replacement"]}
+                args={{ mandateId: bidId }}
+                label={`Bid as ${roleLabel(cast.selectedRole)}`}
+                disabled={!bidId}
+              />
+            ) : (
+              <>
+                <TxButton
+                  label={
+                    stakeApproveAmount != null
+                      ? `Approve ${formatUnits6(stakeApproveAmount)} oCVA`
+                      : "Approve (no stake)"
+                  }
+                  onClick={() => {
+                    if (stakeApproveAmount == null) return;
+                    approve.approve(addresses.MandateRegistry, stakeApproveAmount);
+                  }}
+                  isPending={approve.isPending}
+                  isConfirming={approve.isConfirming}
+                  isConfirmed={approve.isConfirmed}
+                  hash={approve.hash}
+                  error={approve.error}
+                  className="btn secondary"
+                  disabled={stakeApproveAmount == null}
+                />
+                <TxButton
+                  label="Submit bid"
+                  onClick={() => bid.bid(BigInt(bidId))}
+                  isPending={bid.isPending}
+                  isConfirming={bid.isConfirming}
+                  isConfirmed={bid.isConfirmed}
+                  hash={bid.hash}
+                  error={bid.error}
+                  disabled={!bidId || stakeApproveAmount == null}
+                />
+              </>
+            )}
           </div>
           {bid.isConfirmed ? (
             <div className="alert success" style={{ marginTop: "0.85rem" }}>
@@ -477,6 +523,23 @@ function OperatorBody({ tab }: { tab: OpTab }) {
                     <Link className="btn secondary" to={`/market?lorId=${lor.lorId}`}>
                       View on Market →
                     </Link>
+                    {cast.active ? (
+                      <CastActionButton
+                        action="autoList"
+                        args={{ lorId: lor.lorId }}
+                        label="Re-list (cast)"
+                        className="btn ghost"
+                      />
+                    ) : null}
+                  </div>
+                ) : cast.active ? (
+                  <div className="row-actions" style={{ marginTop: "0.65rem" }}>
+                    <CastActionButton
+                      action="autoList"
+                      args={{ lorId: lor.lorId }}
+                      label="Auto-list this LOR"
+                      className="btn secondary"
+                    />
                   </div>
                 ) : null}
               </div>
@@ -528,19 +591,29 @@ function OperatorBody({ tab }: { tab: OpTab }) {
         </div>
       </div>
       <div className="row-actions">
-        <TxButton
-          label="Distribute"
-          onClick={() => {
-            if (!address || !/^\d+$/.test(distGross)) return;
-            distribute.distribute(address as Hex, BigInt(distGross) * 1_000_000n);
-          }}
-          isPending={distribute.isPending}
-          isConfirming={distribute.isConfirming}
-          isConfirmed={distribute.isConfirmed}
-          hash={distribute.hash}
-          error={distribute.error}
-          disabled={!address || !/^\d+$/.test(distGross) || BigInt(distGross) === 0n}
-        />
+        {cast.active ? (
+          <CastActionButton
+            action="distribute"
+            requireRole={["energyOp", "maintOp"]}
+            args={{ gross: distGross }}
+            label="Distribute (cast)"
+            disabled={!/^\d+$/.test(distGross) || BigInt(distGross) === 0n}
+          />
+        ) : (
+          <TxButton
+            label="Distribute"
+            onClick={() => {
+              if (!address || !/^\d+$/.test(distGross)) return;
+              distribute.distribute(address as Hex, BigInt(distGross) * 1_000_000n);
+            }}
+            isPending={distribute.isPending}
+            isConfirming={distribute.isConfirming}
+            isConfirmed={distribute.isConfirmed}
+            hash={distribute.hash}
+            error={distribute.error}
+            disabled={!address || !/^\d+$/.test(distGross) || BigInt(distGross) === 0n}
+          />
+        )}
       </div>
     </section>
   );

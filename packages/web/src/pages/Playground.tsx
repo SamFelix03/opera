@@ -6,6 +6,8 @@ import { SubTabs } from "../components/SubTabs";
 import { SiweStatus } from "../components/SiweGate";
 import { RequireWallet } from "../components/RequireWallet";
 import { CopyButton } from "../components/CopyButton";
+import { CastActionButton } from "../components/CastActionButton";
+import { useCast } from "../hooks/useCast";
 
 type PlayTab = "simulate" | "config";
 
@@ -45,6 +47,7 @@ export function PlaygroundPage() {
   const [error, setError] = useState<string | null>(null);
   const [pushTx, setPushTx] = useState<string | null>(null);
   const siwe = useSiweSession();
+  const cast = useCast();
 
   const liveThreshold = cfg?.autoListThreshold ?? null;
 
@@ -210,6 +213,40 @@ export function PlaygroundPage() {
                 <li>Frozen ×0.35 → score ~31 → full escrow</li>
                 <li>Below live threshold → auto-list triggers</li>
               </ul>
+            </section>
+          ) : null}
+
+          {cast.active ? (
+            <section className="panel">
+              <h2>Live cast freeze</h2>
+              <p className="muted">
+                Run the real sanctions path against the cast maintenance operator — not a
+                simulation. Select Regulator in the cast bar first.
+              </p>
+              <div className="row-actions">
+                <CastActionButton
+                  action="freeze"
+                  role="regulator"
+                  requireRole="regulator"
+                  args={{ targetRole: "maintOp" }}
+                  label="Freeze maint A-Pass"
+                  className="btn secondary"
+                />
+                <CastActionButton
+                  action="pushScore"
+                  role="regulator"
+                  args={{ targetRole: "maintOp" }}
+                  label="Push frozen score"
+                />
+                <CastActionButton
+                  action="activate"
+                  role="regulator"
+                  requireRole="regulator"
+                  args={{ targetRole: "maintOp" }}
+                  label="Activate maint A-Pass"
+                  className="btn ghost"
+                />
+              </div>
             </section>
           ) : null}
         </div>
