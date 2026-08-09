@@ -62,7 +62,7 @@ function WalletBalances() {
         <span className="balance-chip-hint">Cleanverse CVA</span>
       </div>
       {siwe.loading ? (
-        <span className="balance-chip-hint-alone">Signing…</span>
+        <span className="balance-chip-hint-alone">Waiting for signature…</span>
       ) : !siwe.authenticated ? (
         <button type="button" className="balance-chip-hint-alone linkish" onClick={() => void siwe.signIn()}>
           Sign in

@@ -7,11 +7,13 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { useAccount, useSignMessage } from "wagmi";
+import { useAccount, useWalletClient } from "wagmi";
 import { SiweMessage } from "siwe";
 import { apiGet, apiPost } from "../api";
 import { CHAIN_ID } from "../lib/contracts";
 import { appKitReady, walletConfigured } from "../config/appkit";
+
+const SIWE_ADDR_KEY = "opera.siwe.address";
 
 type SessionState = {
   address: string | null;
@@ -23,21 +25,45 @@ type SessionState = {
 
 const SiweContext = createContext<SessionState | null>(null);
 
+function humanize(e: unknown): string {
+  const msg = e instanceof Error ? e.message : String(e);
+  const lower = msg.toLowerCase();
+  if (
+    lower.includes("user rejected") ||
+    lower.includes("user denied") ||
+    lower.includes("rejected the request")
+  ) {
+    return "Sign-in cancelled in wallet.";
+  }
+  return msg || "Sign-in failed";
+}
+
 function SiweProviderInner({ children }: { children: ReactNode }) {
-  const { address, isConnected } = useAccount();
-  const { signMessageAsync } = useSignMessage();
+  const { address, isConnected, connector, status } = useAccount();
+  const { data: walletClient, refetch: refetchWalletClient } = useWalletClient();
   const [authenticated, setAuthenticated] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const prevAddr = useRef<string | null>(null);
-  const autoTried = useRef<string | null>(null);
 
   const signIn = useCallback(async () => {
-    if (!address) return;
+    if (!address) {
+      setError("Connect a wallet first.");
+      return;
+    }
+    if (status !== "connected") {
+      setError("Wallet is still connecting — try Sign in again in a moment.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
-      const { nonce } = await apiGet<{ nonce: string }>(`/auth/nonce?address=${address}`);
+      // 1) Nonce first — UI used to say "confirm in wallet" while this hung.
+      const { nonce } = await apiGet<{ nonce: string }>(
+        `/auth/nonce?address=${address}`,
+      );
+
       const message = new SiweMessage({
         domain: window.location.host,
         address,
@@ -48,26 +74,46 @@ function SiweProviderInner({ children }: { children: ReactNode }) {
         nonce,
       });
       const prepared = message.prepareMessage();
-      const signature = await signMessageAsync({ message: prepared });
+
+      // 2) Sign via the active wallet client (not a fire-and-forget useEffect).
+      // Auto-sign on connect often never opens MetaMask with AppKit — the request
+      // is dropped while the connect modal is still tearing down.
+      let client = walletClient;
+      if (!client) {
+        const refreshed = await refetchWalletClient();
+        client = refreshed.data ?? undefined;
+      }
+      if (!client) {
+        throw new Error(
+          `No wallet client ready${connector?.name ? ` (${connector.name})` : ""}. Disconnect, reconnect, then click Sign in.`,
+        );
+      }
+
+      const signature = await client.signMessage({
+        account: address as `0x${string}`,
+        message: prepared,
+      });
+
       await apiPost("/auth/verify", { message: prepared, signature });
       setAuthenticated(true);
-      sessionStorage.setItem("opera.siwe.address", address.toLowerCase());
+      sessionStorage.setItem(SIWE_ADDR_KEY, address.toLowerCase());
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
       setAuthenticated(false);
+      sessionStorage.removeItem(SIWE_ADDR_KEY);
+      setError(humanize(e));
     } finally {
       setLoading(false);
     }
-  }, [address, signMessageAsync]);
+  }, [address, status, walletClient, refetchWalletClient, connector?.name]);
 
   useEffect(() => {
     if (!isConnected || !address) {
       if (prevAddr.current) {
-        sessionStorage.removeItem("opera.siwe.address");
+        sessionStorage.removeItem(SIWE_ADDR_KEY);
       }
       setAuthenticated(false);
+      setLoading(false);
       prevAddr.current = null;
-      autoTried.current = null;
       return;
     }
 
@@ -75,23 +121,17 @@ function SiweProviderInner({ children }: { children: ReactNode }) {
     if (prevAddr.current === lower) return;
     prevAddr.current = lower;
 
-    const cached = sessionStorage.getItem("opera.siwe.address");
+    const cached = sessionStorage.getItem(SIWE_ADDR_KEY);
     if (cached === lower) {
       setAuthenticated(true);
+      setError(null);
       return;
     }
 
     setAuthenticated(false);
+    // Do NOT auto-call signIn here. MetaMask/AppKit frequently swallow
+    // personal_sign when it is not triggered by a user click after connect.
   }, [isConnected, address]);
-
-  useEffect(() => {
-    if (!isConnected || !address || authenticated || loading) return;
-    const lower = address.toLowerCase();
-    if (autoTried.current === lower) return;
-    if (sessionStorage.getItem("opera.siwe.address") === lower) return;
-    autoTried.current = lower;
-    void signIn();
-  }, [isConnected, address, authenticated, loading, signIn]);
 
   return (
     <SiweContext.Provider

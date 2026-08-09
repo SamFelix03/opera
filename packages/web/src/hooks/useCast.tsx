@@ -81,12 +81,24 @@ export function CastProvider({ children }: { children: ReactNode }) {
     }
     try {
       const [snap, ev] = await Promise.all([getCast(runId), getDemoEvents(runId)]);
+      const seeded = snap.steps.some((s) => s.step === "fundAndStake" && s.status === "done");
+      if (!seeded) {
+        // Stale run from a failed/partial seed — don't treat as active cast.
+        localStorage.removeItem(RUN_KEY);
+        setRunId(null);
+        setCast(null);
+        setEvents([]);
+        return;
+      }
       setCast(snap);
       setEvents(ev.events ?? []);
       if (selectedRole && !snap.roles.some((r) => r.role === selectedRole)) {
         setSelectedRole(snap.roles[0]?.role ?? null);
       }
     } catch (e) {
+      localStorage.removeItem(RUN_KEY);
+      setRunId(null);
+      setCast(null);
       setError(e instanceof Error ? e.message : String(e));
     }
   }, [runId, selectedRole, setSelectedRole]);
@@ -104,12 +116,10 @@ export function CastProvider({ children }: { children: ReactNode }) {
     setError(null);
     try {
       const boot = await bootstrapDemo({});
-      setRunId(boot.runId);
-      localStorage.setItem(RUN_KEY, boot.runId);
-      // Seed runs in the background on the API (avoids nginx 504). Poll until ready.
+      // Do not set runId / localStorage until seed completes successfully.
+
       const accepted = await castAct(boot.runId, { action: "seed" });
       setLastResult(accepted);
-      setSelectedRole("owner");
 
       const deadline = Date.now() + 8 * 60_000;
       let result = accepted;
@@ -133,6 +143,9 @@ export function CastProvider({ children }: { children: ReactNode }) {
           throw new Error(err);
         }
         if (byStep.fundAndStake?.status === "done") {
+          localStorage.setItem(RUN_KEY, boot.runId);
+          setRunId(boot.runId);
+          setSelectedRole("owner");
           result = {
             ...accepted,
             accepted: false,
@@ -153,6 +166,9 @@ export function CastProvider({ children }: { children: ReactNode }) {
         "Seed is still running after 8 minutes. Keep this tab open and refresh Cast HQ, or try Re-seed.",
       );
     } catch (e) {
+      localStorage.removeItem(RUN_KEY);
+      setRunId(null);
+      setCast(null);
       setError(e instanceof Error ? e.message : String(e));
       return null;
     } finally {
@@ -216,7 +232,7 @@ export function CastProvider({ children }: { children: ReactNode }) {
     busy,
     lastResult,
     error,
-    active: !!runId,
+    active: !!runId && !!cast && cast.steps.some((s) => s.step === "fundAndStake" && s.status === "done"),
     roles,
     recentTxs: cast?.recentTxs ?? lastResult?.txs ?? [],
     setSelectedRole,
