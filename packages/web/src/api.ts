@@ -6,7 +6,12 @@ import type {
   DemoStepName,
 } from "./types/demo";
 
-const API = "/api";
+const API = (
+  import.meta.env.VITE_API_BASE?.replace(/\/$/, "") ||
+  (import.meta.env.PROD
+    ? "https://opera-backend-production.up.railway.app"
+    : "/api")
+);
 
 export class ApiError extends Error {
   status: number;

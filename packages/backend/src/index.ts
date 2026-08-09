@@ -32,6 +32,26 @@ export async function buildApp(opts?: {
     logger: false,
   });
 
+  // Browser calls the public Railway URL from the web origin — allow CORS.
+  app.addHook("onRequest", async (req, reply) => {
+    const origin = String(req.headers.origin ?? "");
+    if (origin) {
+      reply.header("Access-Control-Allow-Origin", origin);
+      reply.header("Vary", "Origin");
+      reply.header(
+        "Access-Control-Allow-Headers",
+        "content-type, x-opera-address",
+      );
+      reply.header(
+        "Access-Control-Allow-Methods",
+        "GET,POST,PUT,PATCH,DELETE,OPTIONS",
+      );
+    }
+    if (req.method === "OPTIONS") {
+      return reply.code(204).send();
+    }
+  });
+
   if (!opts?.dbPath) {
     app.addHook("onRequest", async (req) => {
       if (req.url !== "/health") {
