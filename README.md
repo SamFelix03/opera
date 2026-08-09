@@ -232,72 +232,85 @@ Frozen A-Pass (`status=2`) multiplies raw score by **0.35** (demo 88 → 31). Sc
 
 ## 5. Cleanverse Stack Integration
 
-Opera wires Cleanverse cooperate APIs for identity, settlement, CCP eligibility, Travel Rule artefacts, and institutional lookups. Primary helpers: [cleanverse-helpers.ts](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/lib/cleanverse-helpers.ts) · client: [cleanverse-client](https://github.com/SamFelix03/opera/blob/master/packages/cleanverse-client/src/index.ts).
+Opera wires Cleanverse cooperate APIs for identity, settlement, CCP eligibility, Travel Rule artefacts, and institutional lookups.
 
-Env used by the backend: `CLEANVERSE_BASE_URL`, `CLEANVERSE_API_ID`, `CLEANVERSE_API_KEY`, `CLEANVERSE_VALIDATOR_POOL` (ScoreStore address).
+| Layer | Code |
+| --- | --- |
+| Client (AES, HMAC, cooperate methods) | [cleanverse-client/src/index.ts](https://github.com/SamFelix03/opera/blob/master/packages/cleanverse-client/src/index.ts) |
+| Backend helpers | [cleanverse-helpers.ts](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/lib/cleanverse-helpers.ts) |
+| Product `/v1/*` routes | [product-routes.ts](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/product-routes.ts) |
+| Cast actions | [cast-actions.ts](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/demo/cast-actions.ts) |
+| Demo orchestrator | [orchestrator.ts](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/demo/orchestrator.ts) |
+| Score worker | [score-worker.ts](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/score-worker.ts) |
+| Score weights | [score.ts](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/score.ts) |
+| A-Token webhook | [backend index.ts](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/index.ts) |
+| Web API wrappers | [web/src/api.ts](https://github.com/SamFelix03/opera/blob/master/packages/web/src/api.ts) |
+| Chain error mapping | [chain-errors.ts](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/lib/chain-errors.ts) |
+
+Env: `CLEANVERSE_BASE_URL`, `CLEANVERSE_API_ID`, `CLEANVERSE_API_KEY`, `CLEANVERSE_VALIDATOR_POOL` (ScoreStore).
 
 ### 5.0 Integration map
 
 | # | Capability | Role in Opera | Code |
 | --- | --- | --- | --- |
-| 1 | AES-256-CBC | Encrypted write bodies | cleanverse-client |
-| 2 | Webhook HMAC | A-Token apply callbacks on `POST /webhooks/atoken-apply` | [backend webhook](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/index.ts) |
-| 3 | `generate_apass` | Identity bootstrap with `identityDataList` + `issuingCountryISO2` (SG) | `ensureApass` |
-| 4 | `query_apass` (+ list for `registeredAt`) | Status, countries, tenure | `queryApassStatus` |
-| 5 | `update_status` | Freeze (`2`) / activate (`1`) | helpers · cast · product |
-| 6 | `verify_apass` (code 4) | Hard gate on mint / bid / acquire / distribute | `requireComplianceForAction` |
-| 7 | `query_apass_list` | Institution roster + tenure backfill | `GET /v1/apass/list` |
-| 8 | Country tags | Mandate geo before bid (`jurisdictionRoot` vs A-Pass `countries`) | `requireJurisdiction` |
-| 9 | A-Token launch + `query_apply_status` + webhook | Settlement token `OPRACVA3275` | [launch script](https://github.com/SamFelix03/opera/blob/master/scripts/launch-opera-atoken.ts) |
-| 10 | A-Token settlement (oCVA) | Stakes, acquire, revenue | [deployments](https://github.com/SamFelix03/opera/blob/master/config/deployments/monad-testnet.json) |
-| 11 | A-Token A-Pass transfer policy | Frozen seller → `APassNotActive`; acquire temp-activates seller | [chain-errors](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/lib/chain-errors.ts) |
-| 12 | `atoken/add_rule` + `rules` | SG country whitelist on oCVA | `POST /v1/atoken/rules/ensure-sg` · [script](https://github.com/SamFelix03/opera/blob/master/scripts/ensure-atoken-sg-rule.ts) |
-| 13 | Validator grant / register / `verify` / rules | CCP pool = ScoreStore; eligibility gate + score CCP term | [register script](https://github.com/SamFelix03/opera/blob/master/scripts/register-validator-pool.ts) |
-| 14 | `query_txs` | Transfer history for score TR / CCP signals | [score-worker](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/score-worker.ts) |
-| 15 | `download_travel_rule` | After distribute/acquire; audit pack `cleanverse.travelRule` | helpers · `POST /v1/travel-rule` |
-| 16 | `query_deposit_address` | Deposit wallet lookup | `GET /v1/deposit-address/:address` |
-| 17 | `query_institution_white_list` | Institution whitelist read | `GET /v1/institution/whitelist` |
-| 18 | EIP-191 `signOwnerMessage` | Validator grant/register over Ownable `owner()` | register-validator-pool.ts |
+| 1 | AES-256-CBC | Encrypted write bodies | [client](https://github.com/SamFelix03/opera/blob/master/packages/cleanverse-client/src/index.ts) · [crypto.test.ts](https://github.com/SamFelix03/opera/blob/master/packages/cleanverse-client/src/crypto.test.ts) |
+| 2 | Webhook HMAC | `POST /webhooks/atoken-apply` | [index.ts](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/index.ts) · [webhook.test.ts](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/webhook.test.ts) |
+| 3 | `generate_apass` | Identity bootstrap (`identityDataList`, SG) | [ensureApass](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/lib/cleanverse-helpers.ts#L128) · [orchestrator](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/demo/orchestrator.ts) |
+| 4 | `query_apass` (+ list tenure) | Status, countries, tenure | [queryApassStatus](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/lib/cleanverse-helpers.ts#L68) |
+| 5 | `update_status` | Freeze (`2`) / activate (`1`) | [freezeWallet](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/lib/cleanverse-helpers.ts#L184) · [activateWallet](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/lib/cleanverse-helpers.ts#L197) · [cast](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/demo/cast-actions.ts) · [product-routes](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/product-routes.ts) · [ensure-apass-active.ts](https://github.com/SamFelix03/opera/blob/master/scripts/ensure-apass-active.ts) |
+| 6 | `verify_apass` (code 4) | Hard gate mint / bid / acquire / distribute | [requireValidApass](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/lib/cleanverse-helpers.ts#L209) · [requireComplianceForAction](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/lib/cleanverse-helpers.ts#L322) |
+| 7 | `query_apass_list` | Institution roster + tenure backfill | [listInstitutionApasses](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/lib/cleanverse-helpers.ts#L372) · [GET /v1/apass/list](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/product-routes.ts#L172) |
+| 8 | Country tags / geo | Mandate `jurisdictionRoot` vs A-Pass `countries` | [requireJurisdiction](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/lib/cleanverse-helpers.ts#L249) · [cast bid](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/demo/cast-actions.ts) |
+| 9 | A-Token launch + apply status + webhook | Settlement `OPRACVA3275` | [launch-opera-atoken.ts](https://github.com/SamFelix03/opera/blob/master/scripts/launch-opera-atoken.ts) · [opera-atoken.json](https://github.com/SamFelix03/opera/blob/master/config/deployments/opera-atoken.json) |
+| 10 | A-Token settlement (oCVA) | Stakes, acquire, revenue | [monad-testnet.json](https://github.com/SamFelix03/opera/blob/master/config/deployments/monad-testnet.json) |
+| 11 | A-Token A-Pass transfer policy | Frozen seller → `APassNotActive`; temp-activate on acquire | [chain-errors.ts](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/lib/chain-errors.ts) · [cast acquire](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/demo/cast-actions.ts) |
+| 12 | `atoken/add_rule` + `rules` | SG country whitelist on oCVA | [ensureAtokenSgCountryRule](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/lib/cleanverse-helpers.ts#L404) · [POST ensure-sg](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/product-routes.ts#L213) · [ensure-atoken-sg-rule.ts](https://github.com/SamFelix03/opera/blob/master/scripts/ensure-atoken-sg-rule.ts) |
+| 13 | Validator grant / register / `verify` / rules | CCP pool = ScoreStore | [register-validator-pool.ts](https://github.com/SamFelix03/opera/blob/master/scripts/register-validator-pool.ts) · [checkValidatorEligibility](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/lib/cleanverse-helpers.ts#L282) |
+| 14 | `query_txs` | Transfer history for score signals | [score-worker.ts](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/score-worker.ts) |
+| 15 | `download_travel_rule` | After distribute/acquire; audit pack | [downloadTravelRuleForTx](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/lib/cleanverse-helpers.ts#L344) · [POST /v1/travel-rule](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/product-routes.ts#L225) · [orchestrator](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/demo/orchestrator.ts) · [cast](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/demo/cast-actions.ts) |
+| 16 | `query_deposit_address` | Deposit wallet lookup | [queryDepositAddress](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/lib/cleanverse-helpers.ts#L385) · [GET deposit-address](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/product-routes.ts#L184) |
+| 17 | `query_institution_white_list` | Institution whitelist read | [queryInstitutionWhitelist](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/lib/cleanverse-helpers.ts#L389) · [GET whitelist](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/product-routes.ts#L198) |
+| 18 | EIP-191 `signOwnerMessage` | Validator grant/register over Ownable `owner()` | [signOwnerMessage](https://github.com/SamFelix03/opera/blob/master/packages/cleanverse-client/src/index.ts#L66) · [register-validator-pool.ts](https://github.com/SamFelix03/opera/blob/master/scripts/register-validator-pool.ts) · [ownerSignatureFor](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/lib/cleanverse-helpers.ts#L442) |
 
-Unified gate for economic actions: `requireComplianceForAction` = `verify_apass` + jurisdiction match + `validator/verify`.
+Unified gate: [requireComplianceForAction](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/lib/cleanverse-helpers.ts#L322) = `verify_apass` + [requireJurisdiction](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/lib/cleanverse-helpers.ts#L249) + [checkValidatorEligibility](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/lib/cleanverse-helpers.ts#L282).
 
 ### 5.1 A-Pass (CVI identity)
 
-1. Generate / query / activate (`status=1`) / freeze (`status=2`)
+1. Generate / query / activate (`status=1`) / freeze (`status=2`) — helpers in the map above
 2. Country tags from `issuingCountryISO2` at generate (demo: SG)
-3. Freeze drives score collapse in demo and worker paths
+3. Freeze drives score collapse — [score-worker](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/score-worker.ts) · [score.ts](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/score.ts)
 4. Tenure feeds the 40% CVI score term
 5. Country tags gate bids when mandate `jurisdictionRoot` is set (`keccak256("SG")`)
 6. `verify_apass` hard-gates mint, bid, acquire, distribute
-7. A-Pass ensured on operators **and** protocol contracts that receive oCVA (`MandateRegistry`, `LORRegistry`, `RevenueManager`)
-8. Product APIs: `POST /v1/apass/ensure|freeze|activate`, `GET /v1/apass/list`; cast actions mirror these
+7. A-Pass ensured on operators **and** protocol contracts that receive oCVA — [orchestrator](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/demo/orchestrator.ts)
+8. Product APIs: [product-routes `/v1/apass/*`](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/product-routes.ts#L132); cast [ensureApass](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/demo/cast-actions.ts)
 
 Backend enforces jurisdiction before `bid` via A-Pass `countries` vs mandate `jurisdictionRoot`.
 
 ### 5.2 A-Token (CVA settlement)
 
-Cleanverse LAUNCH A-Token `OPRACVA3275` is the settlement ERC-20 for stakes, acquire payments, and revenue. SG allow-rule via `atoken/add_rule`. Frozen A-Pass cannot receive oCVA — acquire temporarily activates the seller, settles, then re-freezes when the sanctions path requires it.
+Cleanverse LAUNCH A-Token `OPRACVA3275` ([opera-atoken.json](https://github.com/SamFelix03/opera/blob/master/config/deployments/opera-atoken.json)) is settlement for stakes, acquire, and revenue. SG allow-rule via `atoken/add_rule`. Frozen A-Pass cannot receive oCVA — acquire temp-activates seller then re-freezes ([cast acquire](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/demo/cast-actions.ts)).
 
 ### 5.3 CCP eligibility & Travel Rule
 
-- Score weights **40 / 40 / 20** in `score.ts`
-- Compliance pool = **ScoreStore** (Ownable); registered with deployer owner signature; env `CLEANVERSE_VALIDATOR_POOL`
-- `validator/verify` feeds CCP score term and gates mint / bid / acquire / distribute
-- `download_travel_rule` after distribute/acquire; artefacts in demo events and export `cleanverse.travelRule[]`
+- Score weights **40 / 40 / 20** in [score.ts](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/score.ts)
+- Compliance pool = **ScoreStore**; [register-validator-pool.ts](https://github.com/SamFelix03/opera/blob/master/scripts/register-validator-pool.ts); env `CLEANVERSE_VALIDATOR_POOL`
+- `validator/verify` feeds CCP term ([score-worker](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/score-worker.ts)) and gates economic actions
+- `download_travel_rule` after distribute/acquire; artefacts in export `cleanverse.travelRule[]`
 
 ### 5.4 Cryptography & webhooks
 
-AES-256-CBC for encrypted cooperate writes; HMAC webhook on raw body for A-Token apply results (`POST /webhooks/atoken-apply`).
+AES-256-CBC for encrypted writes; HMAC on raw body for `POST /webhooks/atoken-apply` — [index.ts](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/index.ts) · [verifyWebhookSignature](https://github.com/SamFelix03/opera/blob/master/packages/cleanverse-client/src/index.ts#L50).
 
 ### 5.5 Product surfaces
 
-| Surface | Behavior |
-| --- | --- |
-| Operator Ensure A-Pass | `/v1/apass/ensure` or cast |
-| WalletBar | oCVA balance on settlement token |
-| Market acquire | Frozen-seller A-Pass settlement note |
-| `GET /v1/me` | A-Pass profile + validator eligibility |
-| Product APIs | `/v1/apass/list`, deposit address, institution whitelist, travel-rule, atoken rules — [api.ts](https://github.com/SamFelix03/opera/blob/master/packages/web/src/api.ts) |
+| Surface | Behavior | Code |
+| --- | --- | --- |
+| Operator Ensure A-Pass | `/v1/apass/ensure` or cast | [product-routes](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/product-routes.ts#L132) · [api.ts](https://github.com/SamFelix03/opera/blob/master/packages/web/src/api.ts) · [Operator.tsx](https://github.com/SamFelix03/opera/blob/master/packages/web/src/pages/Operator.tsx) |
+| WalletBar | oCVA balance | web wallet UI |
+| Market acquire | Frozen-seller A-Pass note | [Market.tsx](https://github.com/SamFelix03/opera/blob/master/packages/web/src/pages/Market.tsx) · [cast acquire](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/demo/cast-actions.ts) |
+| `GET /v1/me` | A-Pass + validator eligibility | [product-routes](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/product-routes.ts#L97) |
+| Product APIs | list / deposit / whitelist / TR / atoken rules | [product-routes](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/product-routes.ts) · [api.ts](https://github.com/SamFelix03/opera/blob/master/packages/web/src/api.ts) |
 
 ### 5.6 Demo path (Cleanverse + chain)
 
@@ -311,11 +324,9 @@ replacementAcquire  → buyer compliance gate; seller ensure + verify; acquireLO
 regulatorExport     → signed pack including cleanverse.travelRule[]
 ```
 
-Orchestrator / cast: [orchestrator.ts](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/demo/orchestrator.ts) · [cast-actions.ts](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/demo/cast-actions.ts)
+[orchestrator.ts](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/demo/orchestrator.ts) · [cast-actions.ts](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/demo/cast-actions.ts) · [HOW_TO_DEMO.md](https://github.com/SamFelix03/opera/blob/master/docs/HOW_TO_DEMO.md)
 
 ---
-
-
 
 ## Scalability plan
 
