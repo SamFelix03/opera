@@ -204,6 +204,17 @@ export function getMe() {
   }>("/v1/me");
 }
 
+/** Public profile for any address (cast-mode desk reads — no SIWE). */
+export function getWalletProfile(address: string) {
+  return apiGet<{
+    address: string;
+    score: Record<string, unknown> | null;
+    onChainScore: string | null;
+    apass: { status: number | null; cvRecordId?: string };
+    settlement: { token: string; symbol: string; decimals: number };
+  }>(`/profile/${address}`);
+}
+
 export function ensureApass() {
   return apiAuthPost<{ ok: boolean; address: string; apass: unknown }>("/v1/apass/ensure");
 }

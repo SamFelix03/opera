@@ -16,6 +16,7 @@ export type DemoRoleWallet = {
 
 export type DemoStepName =
   | "setupIdentities"
+  | "prepareCast"
   | "setupAsset"
   | "fundAndStake"
   | "normalOps"
@@ -76,7 +77,7 @@ export const WIZARD_PHASES: {
     id: "setup",
     title: "Setup",
     description: "Identities, solar asset LORs, mandates, and CVA stakes",
-    steps: ["setupIdentities", "setupAsset", "fundAndStake"],
+    steps: ["setupIdentities", "prepareCast", "setupAsset", "fundAndStake"],
   },
   {
     id: "normalOps",

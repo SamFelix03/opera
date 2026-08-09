@@ -81,7 +81,9 @@ export function CastProvider({ children }: { children: ReactNode }) {
     }
     try {
       const [snap, ev] = await Promise.all([getCast(runId), getDemoEvents(runId)]);
-      const seeded = snap.steps.some((s) => s.step === "fundAndStake" && s.status === "done");
+      const seeded =
+        snap.steps.some((s) => s.step === "prepareCast" && s.status === "done") ||
+        snap.steps.some((s) => s.step === "fundAndStake" && s.status === "done");
       if (!seeded) {
         // Stale run from a failed/partial seed — don't treat as active cast.
         localStorage.removeItem(RUN_KEY);
@@ -132,17 +134,18 @@ export function CastProvider({ children }: { children: ReactNode }) {
         const byStep = Object.fromEntries(snap.steps.map((s) => [s.step, s]));
         const failed =
           byStep.setupIdentities?.status === "failed" ||
-          byStep.setupAsset?.status === "failed" ||
-          byStep.fundAndStake?.status === "failed";
+          byStep.prepareCast?.status === "failed";
         if (failed) {
           const err =
-            byStep.fundAndStake?.error ||
-            byStep.setupAsset?.error ||
+            byStep.prepareCast?.error ||
             byStep.setupIdentities?.error ||
             "Seed failed";
           throw new Error(err);
         }
-        if (byStep.fundAndStake?.status === "done") {
+        if (
+          byStep.prepareCast?.status === "done" ||
+          byStep.fundAndStake?.status === "done"
+        ) {
           localStorage.setItem(RUN_KEY, boot.runId);
           setRunId(boot.runId);
           setSelectedRole("owner");
@@ -150,7 +153,8 @@ export function CastProvider({ children }: { children: ReactNode }) {
             ...accepted,
             accepted: false,
             seeding: false,
-            summary: "Cast seeded: identities, LORs, mandates, funds, and stakes",
+            summary:
+              "Cast ready: wallets funded. Hire next — mint LORs, publish mandates, bid, and award on the desks.",
             ids: Object.fromEntries(
               Object.entries(snap.ids ?? {})
                 .filter(([, v]) => v != null && v !== "")
@@ -232,7 +236,11 @@ export function CastProvider({ children }: { children: ReactNode }) {
     busy,
     lastResult,
     error,
-    active: !!runId && !!cast && cast.steps.some((s) => s.step === "fundAndStake" && s.status === "done"),
+    active:
+      !!runId &&
+      !!cast &&
+      (cast.steps.some((s) => s.step === "prepareCast" && s.status === "done") ||
+        cast.steps.some((s) => s.step === "fundAndStake" && s.status === "done")),
     roles,
     recentTxs: cast?.recentTxs ?? lastResult?.txs ?? [],
     setSelectedRole,

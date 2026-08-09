@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { useAccount, useReadContract } from "wagmi";
+import { useReadContract } from "wagmi";
 import type { Hex } from "viem";
 import { RequireWallet } from "../components/RequireWallet";
 import { SiweStatus } from "../components/SiweGate";
@@ -12,6 +12,7 @@ import { Dialog } from "../components/Dialog";
 import { ActingAsCue } from "../components/ActingAsCue";
 import { CastActionButton } from "../components/CastActionButton";
 import { useCast, roleLabel } from "../hooks/useCast";
+import { useActingWallet } from "../hooks/useActingWallet";
 import {
   useBidMandate,
   useDistributeRevenue,
@@ -19,7 +20,7 @@ import {
 } from "../hooks/useOperaWrites";
 import { useSiweSession } from "../hooks/useSiweSession";
 import { addresses, scoreAbi, revenueAbi, erc20Abi } from "../lib/contracts";
-import { apiGet, getMe, deployments, ensureApass, pushScore } from "../api";
+import { apiGet, getMe, getWalletProfile, deployments, ensureApass, pushScore } from "../api";
 import { formatUnits6, shortAddr } from "../lib/format";
 
 type OpTab = "overview" | "bid" | "portfolio" | "revenue";
@@ -120,12 +121,14 @@ export function OperatorPage() {
 }
 
 function OperatorBody({ tab }: { tab: OpTab }) {
-  const { address } = useAccount();
+  const { viewer, castActive, cast } = useActingWallet();
   const siwe = useSiweSession();
-  const cast = useCast();
   const [searchParams] = useSearchParams();
   const mandateParam = searchParams.get("mandateId");
-  const [me, setMe] = useState<Awaited<ReturnType<typeof getMe>> | null>(null);
+  const [me, setMe] = useState<{
+    onChainScore?: string | null;
+    apass?: { status: number | null };
+  } | null>(null);
   const [openMandates, setOpenMandates] = useState<MandateRow[] | null>(null);
   const [heldLors, setHeldLors] = useState<LorRow[] | null>(null);
   const [bidId, setBidId] = useState("");
@@ -147,7 +150,7 @@ function OperatorBody({ tab }: { tab: OpTab }) {
       const res = await ensureApass();
       setActionOk(true);
       setActionMsg(`A-Pass ensured for ${shortAddr(res.address)}`);
-      setMe(await getMe());
+      if (viewer) setMe(await getWalletProfile(viewer));
     } catch (e) {
       setActionOk(false);
       setActionMsg(e instanceof Error ? e.message : String(e));
@@ -163,7 +166,7 @@ function OperatorBody({ tab }: { tab: OpTab }) {
       const res = await pushScore();
       setActionOk(true);
       setActionMsg(`Score pushed: ${res.score} (tx ${shortAddr(res.tx)})`);
-      setMe(await getMe());
+      if (viewer) setMe(await getWalletProfile(viewer));
     } catch (e) {
       setActionOk(false);
       setActionMsg(e instanceof Error ? e.message : String(e));
@@ -176,45 +179,61 @@ function OperatorBody({ tab }: { tab: OpTab }) {
     address: addresses.ScoreStore,
     abi: scoreAbi,
     functionName: "getScore",
-    args: address ? [address] : undefined,
+    args: viewer ? [viewer] : undefined,
+    query: { enabled: Boolean(viewer) },
   });
 
   const { data: escrowBalance } = useReadContract({
     address: addresses.RevenueManager,
     abi: revenueAbi,
     functionName: "escrow",
-    args: address ? [address] : undefined,
+    args: viewer ? [viewer] : undefined,
+    query: { enabled: Boolean(viewer) },
   });
 
   const { data: tokenBalance } = useReadContract({
     address: addresses.OperaAToken,
     abi: erc20Abi,
     functionName: "balanceOf",
-    args: address ? [address] : undefined,
+    args: viewer ? [viewer] : undefined,
+    query: { enabled: Boolean(viewer) },
   });
 
   useEffect(() => {
+    if (!viewer) {
+      setMe(null);
+      return;
+    }
+    if (castActive) {
+      void getWalletProfile(viewer)
+        .then(setMe)
+        .catch(() => setMe(null));
+      return;
+    }
     if (!siwe.authenticated) return;
     void getMe()
       .then(setMe)
       .catch(() => undefined);
-  }, [siwe.authenticated]);
+  }, [viewer, castActive, siwe.authenticated, cast.lastResult]);
 
   useEffect(() => {
     void apiGet<{ mandates: MandateRow[] }>("/mandates?open=1")
       .then((res) => setOpenMandates(res.mandates ?? []))
       .catch(() => setOpenMandates([]));
-  }, [bid.isConfirmed]);
+  }, [bid.isConfirmed, cast.lastResult]);
 
   useEffect(() => {
-    if (!address) return;
+    if (!viewer) {
+      setHeldLors([]);
+      return;
+    }
     void apiGet<{ lors: LorRow[] }>("/lors")
       .then((res) => {
         const all = res.lors ?? [];
-        setHeldLors(all.filter((l) => l.holder?.toLowerCase() === address.toLowerCase()));
+        setHeldLors(all.filter((l) => l.holder?.toLowerCase() === viewer.toLowerCase()));
       })
       .catch(() => setHeldLors([]));
-  }, [address]);
+  }, [viewer, cast.lastResult]);
 
   const score =
     onChainScore != null
@@ -254,7 +273,7 @@ function OperatorBody({ tab }: { tab: OpTab }) {
           <div className="overview-grid">
             <div>
               <p className="mono muted" style={{ fontSize: "0.8rem" }}>
-                {address}
+                {viewer ?? "—"}
               </p>
               <div className="chip-row">
                 <ScoreBadge score={score} label="Score" />
@@ -285,7 +304,7 @@ function OperatorBody({ tab }: { tab: OpTab }) {
             Next: open Bid to stake oCVA on a mandate, or check Portfolio for LORs you already hold.
           </p>
           <div className="row-actions" style={{ marginTop: "0.85rem" }}>
-            {cast.active ? (
+            {castActive ? (
               <>
                 <CastActionButton
                   action="ensureApass"
@@ -436,7 +455,7 @@ function OperatorBody({ tab }: { tab: OpTab }) {
             </div>
           ) : null}
           <div className="row-actions" style={{ marginTop: "1rem" }}>
-            {cast.active ? (
+            {castActive ? (
               <CastActionButton
                 action="bid"
                 requireRole={["energyOp", "maintOp", "replacement"]}
@@ -523,7 +542,7 @@ function OperatorBody({ tab }: { tab: OpTab }) {
                     <Link className="btn secondary" to={`/market?lorId=${lor.lorId}`}>
                       View on Market →
                     </Link>
-                    {cast.active ? (
+                    {castActive ? (
                       <CastActionButton
                         action="autoList"
                         args={{ lorId: lor.lorId }}
@@ -532,7 +551,7 @@ function OperatorBody({ tab }: { tab: OpTab }) {
                       />
                     ) : null}
                   </div>
-                ) : cast.active ? (
+                ) : castActive ? (
                   <div className="row-actions" style={{ marginTop: "0.65rem" }}>
                     <CastActionButton
                       action="autoList"
@@ -591,7 +610,7 @@ function OperatorBody({ tab }: { tab: OpTab }) {
         </div>
       </div>
       <div className="row-actions">
-        {cast.active ? (
+        {castActive ? (
           <CastActionButton
             action="distribute"
             requireRole={["energyOp", "maintOp"]}
@@ -603,15 +622,15 @@ function OperatorBody({ tab }: { tab: OpTab }) {
           <TxButton
             label="Distribute"
             onClick={() => {
-              if (!address || !/^\d+$/.test(distGross)) return;
-              distribute.distribute(address as Hex, BigInt(distGross) * 1_000_000n);
+              if (!viewer || !/^\d+$/.test(distGross)) return;
+              distribute.distribute(viewer as Hex, BigInt(distGross) * 1_000_000n);
             }}
             isPending={distribute.isPending}
             isConfirming={distribute.isConfirming}
             isConfirmed={distribute.isConfirmed}
             hash={distribute.hash}
             error={distribute.error}
-            disabled={!address || !/^\d+$/.test(distGross) || BigInt(distGross) === 0n}
+            disabled={!viewer || !/^\d+$/.test(distGross) || BigInt(distGross) === 0n}
           />
         )}
       </div>

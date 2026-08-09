@@ -11,14 +11,16 @@ import { Dialog } from "../components/Dialog";
 import { ActingAsCue } from "../components/ActingAsCue";
 import { CastActionButton } from "../components/CastActionButton";
 import { useCast } from "../hooks/useCast";
+import { useActingWallet } from "../hooks/useActingWallet";
 import { usePublishMandate, useAwardMandate } from "../hooks/useOperaWrites";
 import { useSiweSession } from "../hooks/useSiweSession";
-import { useAccount, useReadContract } from "wagmi";
+import { useReadContract } from "wagmi";
 import { keccak256, parseUnits, toBytes, type Hex } from "viem";
 import { addresses, lorAbi, revenueAbi } from "../lib/contracts";
 import {
   apiGet,
   getMe,
+  getWalletProfile,
   mintLor,
   deployments,
   getDemoRun,
@@ -112,13 +114,15 @@ export function OwnerPage() {
 }
 
 function OwnerBody({ tab }: { tab: OwnerTab }) {
-  const { address } = useAccount();
+  const { viewer, castActive, cast } = useActingWallet();
   const siwe = useSiweSession();
-  const cast = useCast();
   const [searchParams] = useSearchParams();
   const holderParam = searchParams.get("holder");
   const mandateParam = searchParams.get("mandateId");
-  const [me, setMe] = useState<Awaited<ReturnType<typeof getMe>> | null>(null);
+  const [me, setMe] = useState<{
+    onChainScore?: string | null;
+    apass?: { status: number | null };
+  } | null>(null);
   const [mandates, setMandates] = useState<MandateRow[] | null>(null);
   const [mintScope, setMintScope] = useState("energy-revenue");
   const [mintHolder, setMintHolder] = useState(holderParam ?? "");
@@ -152,19 +156,30 @@ function OwnerBody({ tab }: { tab: OwnerTab }) {
     address: addresses.RevenueManager,
     abi: revenueAbi,
     functionName: "escrow",
-    args: address ? [address] : undefined,
+    args: viewer ? [viewer] : undefined,
+    query: { enabled: Boolean(viewer) },
   });
 
   useEffect(() => {
+    if (!viewer) {
+      setMe(null);
+      return;
+    }
+    if (castActive) {
+      void getWalletProfile(viewer)
+        .then(setMe)
+        .catch(() => setMe(null));
+      return;
+    }
     if (!siwe.authenticated) return;
     void getMe()
       .then(setMe)
       .catch(() => undefined);
-  }, [siwe.authenticated]);
+  }, [viewer, castActive, siwe.authenticated, cast.lastResult]);
 
   useEffect(() => {
     void reloadMandates();
-  }, [publish.isConfirmed, award.isConfirmed]);
+  }, [publish.isConfirmed, award.isConfirmed, cast.lastResult]);
 
   useEffect(() => {
     if (holderParam) setMintHolder(holderParam);
@@ -224,7 +239,7 @@ function OwnerBody({ tab }: { tab: OwnerTab }) {
           /* ignore */
         }
       }
-      if (cast.active) {
+      if (castActive) {
         for (const r of cast.roles) {
           if (!r.address) continue;
           if (/operator|maint|energy|replacement/i.test(r.role)) {
@@ -236,7 +251,7 @@ function OwnerBody({ tab }: { tab: OwnerTab }) {
         [...map.entries()].map(([addr, label]) => ({ address: addr, label })).slice(0, 32),
       );
     })();
-  }, [publish.isConfirmed, award.isConfirmed, cast.active, cast.roles]);
+  }, [publish.isConfirmed, award.isConfirmed, castActive, cast.roles, cast.lastResult]);
 
   useEffect(() => {
     if (tab !== "mandates" || !mandateParam || !mandates) return;
@@ -280,10 +295,11 @@ function OwnerBody({ tab }: { tab: OwnerTab }) {
     }
   }
 
-  const castOwner = cast.roles.find((r) => r.role === "owner")?.address;
-  const viewer = cast.active ? castOwner : address;
+  const viewerForMandates = castActive
+    ? (cast.roles.find((r) => r.role === "owner")?.address ?? viewer)
+    : viewer;
   const mine = (mandates ?? []).filter(
-    (m) => m.publisher?.toLowerCase() === viewer?.toLowerCase(),
+    (m) => m.publisher?.toLowerCase() === viewerForMandates?.toLowerCase(),
   );
   const openMine = mine.filter((m) => m.open && !m.awarded);
 
@@ -294,7 +310,7 @@ function OwnerBody({ tab }: { tab: OwnerTab }) {
           <div className="overview-grid">
             <div>
               <p className="mono muted" style={{ fontSize: "0.8rem" }}>
-                {address}
+                {viewer ?? "—"}
               </p>
               <div className="chip-row">
                 <ScoreBadge score={me?.onChainScore ?? null} label="Score" />
@@ -377,7 +393,7 @@ function OwnerBody({ tab }: { tab: OwnerTab }) {
           <option value="maintenance">maintenance</option>
         </select>
         <div className="row-actions">
-          {cast.active ? (
+          {castActive ? (
             <CastActionButton
               action="mintLor"
               role="owner"
@@ -429,7 +445,7 @@ function OwnerBody({ tab }: { tab: OwnerTab }) {
               onChange={(e) => setPublishStake(e.target.value)}
             />
             <div className="row-actions">
-              {cast.active ? (
+              {castActive ? (
                 <CastActionButton
                   action="publishMandate"
                   role="owner"
@@ -591,7 +607,7 @@ function OwnerBody({ tab }: { tab: OwnerTab }) {
               )}
 
               <div className="row-actions" style={{ marginTop: "1rem" }}>
-                {cast.active ? (
+                {castActive ? (
                   <CastActionButton
                     action="award"
                     role="owner"
@@ -631,7 +647,7 @@ function OwnerBody({ tab }: { tab: OwnerTab }) {
     <section className="panel">
       <h2>Compliance alerts</h2>
       <p className="muted">Auto-listings, score moves, and mandate updates for your address.</p>
-      <NotificationList address={address?.toLowerCase() ?? null} />
+      <NotificationList address={viewerForMandates?.toLowerCase() ?? viewer?.toLowerCase() ?? null} />
     </section>
   );
 }

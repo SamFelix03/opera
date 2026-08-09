@@ -60,15 +60,15 @@ const STAGES: {
     role: "system",
     desk: "Cast HQ",
     to: "/demo",
-    hint: "Bootstrap wallets, mint LORs, publish mandates, fund oCVA stakes",
+    hint: "Create role wallets, A-Passes, fund MON + oCVA — no hire yet",
   },
   {
     id: "hire",
-    title: "2. Hire",
+    title: "2. Hire (manual)",
     role: "owner",
     desk: "Owner",
-    to: "/owner?tab=mandates",
-    hint: "Mint LORs, publish auctions, award bidders",
+    to: "/owner?tab=mint",
+    hint: "Mint LORs → publish mandates → operators bid → owner awards",
   },
   {
     id: "operate",
@@ -76,7 +76,7 @@ const STAGES: {
     role: "energyOp",
     desk: "Operator",
     to: "/operator?tab=revenue",
-    hint: "Bid (if needed) and distribute revenue under yield bonding",
+    hint: "Distribute revenue under yield bonding",
   },
   {
     id: "freeze",
@@ -116,19 +116,27 @@ function stageStatus(
   suggested: string,
   stageId: string,
   steps: Array<{ step: string; status: string }>,
+  ids?: Record<string, string | number | null | undefined> | null,
 ): "done" | "ready" | "pending" {
   const done = new Set(steps.filter((s) => s.status === "done").map((s) => s.step));
+  const seeded = done.has("prepareCast") || done.has("fundAndStake");
+  const hired =
+    ids?.energyLorId != null &&
+    ids?.maintLorId != null &&
+    ids?.energyMandateId != null &&
+    ids?.maintMandateId != null;
+
   if (stageId === "seed") {
-    return done.has("fundAndStake") || done.has("setupAsset") ? "done" : suggested === "seed" ? "ready" : "pending";
+    return seeded ? "done" : suggested === "seed" ? "ready" : "pending";
   }
   if (stageId === "hire") {
-    return done.has("fundAndStake") ? "done" : done.has("setupAsset") ? "ready" : "pending";
+    return hired || done.has("setupAsset") ? "done" : seeded ? "ready" : "pending";
   }
   if (stageId === "operate") {
-    return done.has("normalOps") ? "done" : done.has("fundAndStake") ? "ready" : "pending";
+    return done.has("normalOps") ? "done" : hired || seeded ? "ready" : "pending";
   }
   if (stageId === "freeze" || stageId === "autolist") {
-    return done.has("sanctionsEvent") ? "done" : done.has("normalOps") || done.has("fundAndStake") ? "ready" : "pending";
+    return done.has("sanctionsEvent") ? "done" : hired || seeded ? "ready" : "pending";
   }
   if (stageId === "acquire") {
     return done.has("replacementAcquire") ? "done" : done.has("sanctionsEvent") ? "ready" : "pending";
@@ -152,9 +160,8 @@ export function DemoPage() {
           <p className="eyebrow">PRD §8 · Solar farm</p>
           <h1>Cast HQ</h1>
           <p className="lede">
-            Seed the cast, pick who you are acting as, then run the story from Owner, Operator,
-            Market, Rules, and Audit. Seed takes a few minutes (chain + Cleanverse) — leave this
-            tab open until the cast bar appears.
+            Seed creates role wallets and funds them. Then act as each role and run hire → operate →
+            freeze → replace → export from the desks (cast-signed).
           </p>
         </div>
         <div className="page-actions">
@@ -253,12 +260,12 @@ export function DemoPage() {
       <section className="panel">
         <h2>Lifecycle board</h2>
         <p className="muted">
-          Follow the stages in order. Each stage names the cast role that should be selected in the
-          bar, then open that desk.
+          Follow the stages in order. Seed only funds wallets — you hire and operate on the desks
+          while acting as each cast role.
         </p>
         <ol className="cast-stage-board">
           {STAGES.map((stage) => {
-            const status = stageStatus(suggested, stage.id, steps);
+            const status = stageStatus(suggested, stage.id, steps, ids);
             return (
               <li key={stage.id} className={`cast-stage cast-stage-${status}`}>
                 <div className="cast-stage-head">
@@ -298,7 +305,7 @@ export function DemoPage() {
                       <p className="tiny muted" style={{ marginTop: "0.5rem" }}>
                         {cast.cast.steps
                           .filter((s) =>
-                            ["setupIdentities", "setupAsset", "fundAndStake"].includes(s.step),
+                            ["setupIdentities", "prepareCast"].includes(s.step),
                           )
                           .map((s) => `${s.step}: ${s.status}`)
                           .join(" · ")}

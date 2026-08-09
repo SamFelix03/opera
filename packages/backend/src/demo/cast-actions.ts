@@ -59,7 +59,7 @@ const JURISDICTION_SG = keccak256(toBytes("SG"));
 /** In-process lock so concurrent Seed clicks don't double-mint. */
 const seedingRuns = new Set<string>();
 
-const SEED_STEPS: DemoStepName[] = ["setupIdentities", "setupAsset", "fundAndStake"];
+const SEED_STEPS: DemoStepName[] = ["setupIdentities", "prepareCast"];
 
 export const CAST_ACTIONS = [
   "seed",
@@ -101,7 +101,10 @@ export function isSeedInProgress(runId: string): boolean {
 
 export function isSeedComplete(db: Database.Database, runId: string): boolean {
   const steps = listStepStatuses(db, runId);
-  return steps.some((s) => s.step === "fundAndStake" && s.status === "done");
+  return (
+    steps.some((s) => s.step === "prepareCast" && s.status === "done") ||
+    steps.some((s) => s.step === "fundAndStake" && s.status === "done")
+  );
 }
 
 export function seedFailure(db: Database.Database, runId: string): string | null {
@@ -132,7 +135,15 @@ function scopeHash(scope: string): Hex {
 function suggestedStage(db: Database.Database, runId: string): string {
   const steps = listStepStatuses(db, runId);
   const done = new Set(steps.filter((s) => s.status === "done").map((s) => s.step));
-  if (!done.has("fundAndStake") && !done.has("setupAsset")) return "seed";
+  const run = getDemoRun(db, runId);
+  if (!done.has("prepareCast") && !done.has("fundAndStake")) return "seed";
+  // Manual hire: both LORs + both mandates published (award optional for stage advance)
+  const hired =
+    run?.energyLorId != null &&
+    run?.maintLorId != null &&
+    run?.energyMandateId != null &&
+    run?.maintMandateId != null;
+  if (!hired && !done.has("setupAsset")) return "hire";
   if (!done.has("normalOps")) return "operate";
   if (!done.has("sanctionsEvent")) return "freeze";
   if (!done.has("replacementAcquire")) return "acquire";
@@ -224,18 +235,24 @@ export async function executeCastAct(
 
   if (action === "seed") {
     const steps = listStepStatuses(db, runId);
-    let fund: Record<string, unknown> | undefined;
+    let prepared: Record<string, unknown> | undefined;
     for (const step of SEED_STEPS) {
       const row = steps.find((s) => s.step === step);
       if (row?.status === "done") continue;
-      // Recover from a previous timed-out/crashed attempt stuck on "running".
       if (row?.status === "running") {
         setStepStatus(db, runId, step, "pending");
       }
       const result = await orch.runStep(runId, step);
-      if (step === "fundAndStake") fund = result as Record<string, unknown>;
+      if (step === "prepareCast") prepared = result as Record<string, unknown>;
     }
-    for (const [k, v] of Object.entries(fund ?? {})) {
+    // Skip auto-hire steps so Cast HQ demos do mint/publish/bid/award on desks.
+    for (const skip of ["setupAsset", "fundAndStake"] as DemoStepName[]) {
+      const row = steps.find((s) => s.step === skip);
+      if (row?.status === "pending" || row?.status === "failed" || row?.status === "running") {
+        setStepStatus(db, runId, skip, "skipped");
+      }
+    }
+    for (const [k, v] of Object.entries(prepared ?? {})) {
       if (typeof v === "string" && v.startsWith("0x") && v.length >= 66) {
         txs.push({ label: k, hash: v });
       }
@@ -243,12 +260,10 @@ export async function executeCastAct(
     const run = getDemoRun(db, runId)!;
     ids = {
       assetId: String(run.assetId ?? ""),
-      energyLorId: String(run.energyLorId ?? ""),
-      maintLorId: String(run.maintLorId ?? ""),
-      energyMandateId: String(run.energyMandateId ?? ""),
-      maintMandateId: String(run.maintMandateId ?? ""),
+      settlementToken: String(run.settlementToken ?? ""),
     };
-    summary = "Cast seeded: identities, LORs, mandates, funds, and stakes";
+    summary =
+      "Cast ready: wallets funded with MON + oCVA. Hire next — mint LORs, publish mandates, bid, and award on the desks.";
     for (const r of listDemoRoles(db, runId)) {
       actors.push({ role: r.role, address: r.address });
     }
@@ -551,7 +566,7 @@ export async function executeCastAct(
 
 /**
  * Start seed in the background so proxies (nginx ~60–120s) don't 504.
- * Client should poll GET /demo/:runId/cast until fundAndStake is done.
+ * Client should poll GET /demo/:runId/cast until prepareCast is done.
  */
 export function beginSeedInBackground(
   db: Database.Database,
@@ -592,7 +607,7 @@ export function beginSeedInBackground(
       ok: true,
       role: null,
       action: "seed",
-      summary: "Seed already in progress — poll cast until fundAndStake is done",
+      summary: "Seed already in progress — poll cast until prepareCast is done",
       actors,
       txs: [],
       run: orch.getRun(runId),
@@ -630,7 +645,7 @@ export function beginSeedInBackground(
     role: null,
     action: "seed",
     summary:
-      "Seed started in background (2–5 min on Monad). Stay on Cast HQ — progress updates as steps finish.",
+      "Seed started in background. Cast wallets will be funded — then hire manually on Owner / Operator desks.",
     actors,
     txs: [],
     run: orch.getRun(runId),

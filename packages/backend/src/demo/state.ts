@@ -17,6 +17,7 @@ export type DemoRole = (typeof DEMO_ROLES)[number];
 
 export const DEMO_STEPS = [
   "setupIdentities",
+  "prepareCast",
   "setupAsset",
   "fundAndStake",
   "normalOps",

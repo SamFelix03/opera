@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { useAccount, useReadContract } from "wagmi";
+import { useReadContract } from "wagmi";
 import { RequireWallet } from "../components/RequireWallet";
 import { SubTabs } from "../components/SubTabs";
 import { TxButton } from "../components/TxButton";
@@ -8,7 +8,8 @@ import { ScoreBadge } from "../components/ScoreBadge";
 import { CleanverseStrip, RoleGuide } from "../components/CleanverseStrip";
 import { Dialog } from "../components/Dialog";
 import { CastActionButton } from "../components/CastActionButton";
-import { useCast, roleLabel } from "../hooks/useCast";
+import { roleLabel } from "../hooks/useCast";
+import { useActingWallet } from "../hooks/useActingWallet";
 import { useAcquireLOR, useApproveToken } from "../hooks/useOperaWrites";
 import { addresses, lorAbi, scoreAbi } from "../lib/contracts";
 import { apiGet, deployments } from "../api";
@@ -50,14 +51,14 @@ export function MarketPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const acquire = useAcquireLOR();
   const approve = useApproveToken();
-  const { address } = useAccount();
-  const cast = useCast();
+  const { viewer, cast } = useActingWallet();
 
   const { data: buyerScore } = useReadContract({
     address: addresses.ScoreStore,
     abi: scoreAbi,
     functionName: "getScore",
-    args: address ? [address] : undefined,
+    args: viewer ? [viewer] : undefined,
+    query: { enabled: Boolean(viewer) },
   });
 
   const { data: nextLorId } = useReadContract({
@@ -77,7 +78,7 @@ export function MarketPage() {
     void apiGet<OracleData>("/oracle/prices")
       .then(setOracle)
       .catch(() => setOracle(null));
-  }, [acquire.isConfirmed]);
+  }, [acquire.isConfirmed, cast.lastResult]);
 
   const deepLorId = searchParams.get("lorId");
 
@@ -160,7 +161,7 @@ export function MarketPage() {
                 </span>
                 <span className="stat-label">Total LORs</span>
               </div>
-              {address && buyerScore != null ? (
+              {viewer && buyerScore != null ? (
                 <div className="stat-item">
                   <span className="stat-value">{Number(buyerScore)}</span>
                   <span className="stat-label">Your score</span>

@@ -36,6 +36,45 @@ export async function registerProductRoutes(
 ) {
   const cv = clientFromEnv();
 
+  /** Public wallet snapshot for cast-mode desks (no SIWE). */
+  app.get("/profile/:address", async (req: FastifyRequest, reply: FastifyReply) => {
+    const { address: raw } = req.params as { address: string };
+    let addr: string;
+    try {
+      addr = getAddress(raw).toLowerCase();
+    } catch {
+      return reply.code(400).send({ error: "invalid address" });
+    }
+    const ctx = createChainCtx();
+    const scoreRow = db.prepare("SELECT * FROM scores WHERE address = ?").get(addr) as
+      | Record<string, unknown>
+      | undefined;
+    let onChainScore: string | null = null;
+    try {
+      const s = await ctx.publicClient.readContract({
+        address: ctx.deployment.contracts.ScoreStore,
+        abi: scoreAbi,
+        functionName: "getScore",
+        args: [addr as Hex],
+      });
+      onChainScore = s.toString();
+    } catch {
+      /* not set */
+    }
+    const apass = await queryApassStatus(cv, addr);
+    return {
+      address: addr,
+      score: scoreRow ?? null,
+      onChainScore,
+      apass,
+      settlement: {
+        token: ctx.deployment.settlementToken,
+        symbol: ctx.deployment.settlementSymbol ?? "oCVA",
+        decimals: ctx.deployment.settlementDecimals ?? 6,
+      },
+    };
+  });
+
   app.get("/v1/me", async (req: FastifyRequest, reply: FastifyReply) => {
     const addr = requireSession(db, req, reply);
     if (!addr) return;

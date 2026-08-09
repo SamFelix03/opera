@@ -60,11 +60,18 @@ describe("demo orchestrator step machine (mock)", () => {
     const { results } = await orch.runAll(runId);
 
     for (const step of DEMO_STEPS) {
+      if (step === "prepareCast") {
+        expect(results[step]).toBeUndefined();
+        continue;
+      }
       expect(results[step]).toBeDefined();
     }
 
     const steps = listStepStatuses(db, runId);
-    expect(steps.every((s) => s.status === "done")).toBe(true);
+    expect(steps.find((s) => s.step === "prepareCast")?.status).toBe("skipped");
+    expect(
+      steps.filter((s) => s.step !== "prepareCast").every((s) => s.status === "done"),
+    ).toBe(true);
 
     const events = listDemoEvents(db, runId);
     expect(events.some((e) => e.kind === "step.start")).toBe(true);

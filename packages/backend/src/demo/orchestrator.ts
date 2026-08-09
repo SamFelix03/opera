@@ -1,8 +1,11 @@
 /**
  * PRD §8 solar-farm demo — thin step machine over Cleanverse + Monad contracts.
  *
- * Steps: bootstrap → setupIdentities → setupAsset → fundAndStake → normalOps
- *        → sanctionsEvent → replacementAcquire → regulatorExport
+ * Steps: bootstrap → setupIdentities → prepareCast → setupAsset → fundAndStake
+ *        → normalOps → sanctionsEvent → replacementAcquire → regulatorExport
+ *
+ * Cast HQ seed only runs setupIdentities + prepareCast (wallets ready).
+ * Hire (mint / publish / bid / award) is done manually on the desks.
  */
 import { mkdirSync, writeFileSync, readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
@@ -247,6 +250,7 @@ export class DemoOrchestrator {
     try {
       const fn = {
         setupIdentities: () => this.setupIdentities(runId),
+        prepareCast: () => this.prepareCast(runId),
         setupAsset: () => this.setupAsset(runId),
         fundAndStake: () => this.fundAndStake(runId),
         normalOps: () => this.normalOps(runId),
@@ -271,6 +275,11 @@ export class DemoOrchestrator {
     updateDemoRun(this.db, runId, { status: "running" });
     this.log(runId, null, "run-all.start", "Sequential demo run started");
     for (const step of DEMO_STEPS) {
+      // prepareCast is for Cast HQ manual-hire demos; full run-all uses setupAsset + fundAndStake.
+      if (step === "prepareCast") {
+        setStepStatus(this.db, runId, step, "skipped");
+        continue;
+      }
       results[step] = await this.runStep(runId, step);
     }
     updateDemoRun(this.db, runId, { status: "completed", currentStep: "regulatorExport" });
@@ -324,6 +333,92 @@ export class DemoOrchestrator {
       out[role] = { generated: true, requestId: gen.requestId };
     }
     return out;
+  }
+
+  /**
+   * Cast HQ bootstrap: A-Passes already via setupIdentities.
+   * Funds wallets with MON + oCVA, ensures contract A-Passes, pushes healthy scores.
+   * Does NOT mint LORs, publish mandates, bid, or award — those are manual desk acts.
+   */
+  async prepareCast(runId: string) {
+    const energy = getDemoRole(this.db, runId, "energyOp")!;
+    const maint = getDemoRole(this.db, runId, "maintOp")!;
+    const replacement = getDemoRole(this.db, runId, "replacement")!;
+    const owner = getDemoRole(this.db, runId, "owner")!;
+    const investor = getDemoRole(this.db, runId, "investor")!;
+    const regulator = getDemoRole(this.db, runId, "regulator")!;
+
+    if (this.opts.mock) {
+      updateDemoRun(this.db, runId, {
+        assetId: 1,
+        settlementToken: "0xmock",
+        settlementMode: "mock",
+      });
+      this.log(runId, "prepareCast", "cast.mock", "Mock cast wallets funded");
+      return { mode: "mock", assetId: 1 };
+    }
+
+    const ctx = this.getChain();
+    const d = ctx.deployment;
+    const assetId = Number(d.assetId ?? 1);
+    const token = this.settlementToken();
+    updateDemoRun(this.db, runId, {
+      assetId,
+      settlementToken: token,
+      settlementMode: "opera-atoken",
+    });
+
+    const mintAmt = parseUnits("100000", DECIMALS);
+    const funded = [owner, energy, maint, replacement, investor, regulator];
+
+    for (const r of funded) {
+      const addr = r.address as Hex;
+      await this.ensureGas(ctx, addr);
+      await this.ensureApass(addr, r.role);
+    }
+    // Operators + owner + replacement need oCVA for mint/stake/acquire flows
+    for (const r of [owner, energy, maint, replacement]) {
+      await waitTx(
+        ctx,
+        await write(ctx.deployerWallet, {
+          address: token,
+          abi: erc20Abi,
+          functionName: "mint",
+          args: [r.address as Hex, mintAmt],
+        }),
+      );
+    }
+    for (const addr of [
+      d.contracts.MandateRegistry,
+      d.contracts.LORRegistry,
+      d.contracts.RevenueManager,
+    ] as Hex[]) {
+      await this.ensureApass(addr, "CTR");
+    }
+
+    const eScore = computeScore({
+      ...demoInputs88(energy.address, false),
+      travelRuleCompleteTransfers: 5,
+      crossBorderTransfers: 5,
+    });
+    const mScore = computeScore(demoInputs88(maint.address, false));
+    const rScore = computeScore({
+      ...demoInputs88(replacement.address, false),
+      travelRuleCompleteTransfers: 5,
+      crossBorderTransfers: 5,
+    });
+    await this.setScore(ctx, energy.address as Hex, eScore.score, "cast-e");
+    await this.setScore(ctx, maint.address as Hex, mScore.score, "cast-m");
+    await this.setScore(ctx, replacement.address as Hex, rScore.score, "cast-r");
+
+    this.log(runId, "prepareCast", "cast.ready", "Cast wallets funded — hire manually on desks", {
+      assetId,
+      token,
+      energyScore: eScore.score,
+      maintScore: mScore.score,
+      replacementScore: rScore.score,
+    });
+    return { assetId, token, energyScore: eScore.score, maintScore: mScore.score };
   }
 
   async setupAsset(runId: string) {
