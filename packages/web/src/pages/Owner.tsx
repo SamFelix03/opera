@@ -68,7 +68,10 @@ export function OwnerPage() {
   function setTab(next: OwnerTab) {
     const nextParams = new URLSearchParams(searchParams);
     nextParams.set("tab", next);
-    if (next !== "mint") nextParams.delete("holder");
+    if (next !== "mint") {
+      nextParams.delete("holder");
+      nextParams.delete("scope");
+    }
     if (next !== "mandates") nextParams.delete("mandateId");
     setSearchParams(nextParams, { replace: true });
   }
@@ -115,8 +118,9 @@ export function OwnerPage() {
 function OwnerBody({ tab }: { tab: OwnerTab }) {
   const { viewer, castActive, cast } = useActingWallet();
   const siwe = useSiweSession();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const holderParam = searchParams.get("holder");
+  const scopeParam = searchParams.get("scope");
   const mandateParam = searchParams.get("mandateId");
   const [me, setMe] = useState<{
     onChainScore?: string | null;
@@ -124,7 +128,12 @@ function OwnerBody({ tab }: { tab: OwnerTab }) {
   } | null>(null);
   const [mandates, setMandates] = useState<MandateRow[] | null>(null);
   const [mandatesError, setMandatesError] = useState<string | null>(null);
-  const [mintScope, setMintScope] = useState("energy-revenue");
+  const [lors, setLors] = useState<{ holder: string; scope: string }[]>([]);
+  const [mintScope, setMintScope] = useState(
+    scopeParam === "maintenance" || scopeParam === "energy-revenue"
+      ? scopeParam
+      : "energy-revenue",
+  );
   const [mintHolder, setMintHolder] = useState(holderParam ?? "");
   const [mintResult, setMintResult] = useState<string | null>(null);
   const [mintBusy, setMintBusy] = useState(false);
@@ -217,6 +226,38 @@ function OwnerBody({ tab }: { tab: OwnerTab }) {
   useEffect(() => {
     if (holderParam) setMintHolder(holderParam);
   }, [holderParam]);
+
+  useEffect(() => {
+    if (scopeParam === "maintenance" || scopeParam === "energy-revenue") {
+      setMintScope(scopeParam);
+    }
+  }, [scopeParam]);
+
+  useEffect(() => {
+    void apiGet<{ lors: { holder: string; scope: string }[] }>("/lors?limit=100")
+      .then((res) => setLors(res.lors ?? []))
+      .catch(() => setLors([]));
+  }, [cast.lastResult, mintResult, tab, award.isConfirmed]);
+
+  const winnerHoldsLor = (m: MandateRow) => {
+    if (!m.winner || m.winner === "0x0000000000000000000000000000000000000000") {
+      return false;
+    }
+    const w = m.winner.toLowerCase();
+    const scope = m.scope.toLowerCase();
+    return lors.some(
+      (l) => l.holder?.toLowerCase() === w && l.scope?.toLowerCase() === scope,
+    );
+  };
+
+  const goMintForWinner = (m: MandateRow) => {
+    const next = new URLSearchParams(searchParams);
+    next.set("tab", "mint");
+    next.set("holder", m.winner);
+    next.set("scope", m.scope);
+    next.delete("mandateId");
+    setSearchParams(next, { replace: true });
+  };
 
   useEffect(() => {
     if (tab !== "mandates" || !mandateParam || !mandates) return;
@@ -319,6 +360,15 @@ function OwnerBody({ tab }: { tab: OwnerTab }) {
         <p className="muted">
           Grant an operator on-chain authority for a specific scope (e.g. energy-revenue, maintenance).
         </p>
+        {holderParam ? (
+          <div className="section-callout" role="status" style={{ marginBottom: "0.85rem" }}>
+            <strong>Mint for mandate winner</strong>
+            <p>
+              This wallet won an auction for <code>{mintScope}</code> but does not hold that LOR yet.
+              Confirm and mint to grant the operating right.
+            </p>
+          </div>
+        ) : null}
 
         <label htmlFor="mint-holder">Operator wallet</label>
         <input
@@ -421,10 +471,10 @@ function OwnerBody({ tab }: { tab: OwnerTab }) {
           </section>
 
           <div className="section-callout" role="note">
-            <strong>Award from the list</strong>
+            <strong>Award, then mint the LOR</strong>
             <p>
-              When operators bid, open a mandate on the right and pick a winner from the bidder list —
-              no IDs to type.
+              When operators bid, award a winner from the list. If they do not already hold that
+              scope&apos;s LOR, the card prompts you to mint it for them.
             </p>
           </div>
         </div>
@@ -456,24 +506,41 @@ function OwnerBody({ tab }: { tab: OwnerTab }) {
               <div className="mandate-list">
                 {mine.map((m) => {
                   const canAward = m.open && !m.awarded;
+                  const needsLor =
+                    m.awarded &&
+                    Boolean(m.winner) &&
+                    m.winner !== "0x0000000000000000000000000000000000000000" &&
+                    !winnerHoldsLor(m);
                   const isSelected =
                     awardOpen && selectedMandate?.mandateId === m.mandateId;
-                  const status = m.awarded ? "Awarded" : m.open ? "Open" : "Closed";
-                  const statusClass = m.awarded
-                    ? "partial"
-                    : m.open
-                      ? "full"
-                      : "suspended";
+                  const status = needsLor
+                    ? "Needs LOR"
+                    : m.awarded
+                      ? "Awarded"
+                      : m.open
+                        ? "Open"
+                        : "Closed";
+                  const statusClass = needsLor
+                    ? "significant"
+                    : m.awarded
+                      ? "partial"
+                      : m.open
+                        ? "full"
+                        : "suspended";
+                  const interactive = canAward || needsLor;
                   return (
                     <button
                       type="button"
-                      className={`mandate-row${isSelected ? " selected" : ""}${canAward ? "" : " readonly"}`}
+                      className={`mandate-row${isSelected ? " selected" : ""}${interactive ? "" : " readonly"}`}
                       key={m.mandateId}
-                      disabled={!canAward}
+                      disabled={!interactive}
                       onClick={() => {
-                        if (!canAward) return;
-                        setSelectedMandate(m);
-                        setAwardOpen(true);
+                        if (canAward) {
+                          setSelectedMandate(m);
+                          setAwardOpen(true);
+                          return;
+                        }
+                        if (needsLor) goMintForWinner(m);
                       }}
                     >
                       <div>
@@ -507,9 +574,14 @@ function OwnerBody({ tab }: { tab: OwnerTab }) {
                             </span>
                           </div>
                         </div>
+                        {needsLor ? (
+                          <p className="muted" style={{ fontSize: "0.75rem", margin: "0.5rem 0 0" }}>
+                            Winner is hired but has no {m.scope} LOR yet — mint the right next.
+                          </p>
+                        ) : null}
                       </div>
                       <span className="mandate-row-cta">
-                        {canAward ? "Award" : m.awarded ? "Awarded" : "Closed"}
+                        {canAward ? "Award" : needsLor ? "Mint LOR" : m.awarded ? "Awarded" : "Closed"}
                       </span>
                     </button>
                   );
