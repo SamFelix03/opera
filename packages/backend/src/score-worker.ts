@@ -1,6 +1,7 @@
 /**
- * Score polling worker — reads Cleanverse A-Pass status + derives CCP/TR proxies,
- * writes ScoreStore with auditable input hash.
+ * Score polling worker — Cleanverse A-Pass (tenure + freeze) + validator CCP eligibility
+ * when CLEANVERSE_VALIDATOR_POOL is set + query_txs as TR proxy.
+ * CCP AML clean-rate from a real AML feed remains conceptual (roadmap).
  */
 import { config } from "dotenv";
 import { resolve } from "node:path";
@@ -20,6 +21,10 @@ import { computeScore } from "./score.js";
 import { openAuditDb, insertAuditEvent } from "./db.js";
 import { maybeAutoListForAddress } from "./demo/auto-list.js";
 import { ensureDemoTables } from "./demo/state.js";
+import {
+  checkValidatorEligibility,
+  queryApassStatus,
+} from "./lib/cleanverse-helpers.js";
 
 const root = resolve(fileURLToPath(new URL(".", import.meta.url)), "../../..");
 config({ path: resolve(root, "config/.env") });
@@ -35,28 +40,24 @@ const operatorsEnv = (process.env.SCORE_OPERATORS ?? "")
 
 export async function tickScore(address: `0x${string}`) {
   const cv = clientFromEnv();
-  let frozen = false;
-  let tenureDays = 30;
   let requestIds: string[] = [];
 
-  try {
-    const q = await cv.queryApass({ chain: "monad", address });
-    requestIds.push(q.requestId);
-    const data = q.data as {
-      status?: number;
-      expirationTime?: number;
-    };
-    frozen = data.status === 2;
-    // Approximate tenure: sandbox A-Pass often omits registeredAt — use full year for
-    // PRD-aligned scores unless SCORE_TENURE_DAYS is set. Worker must not collapse demo ≥80.
-    tenureDays = Number(process.env.SCORE_TENURE_DAYS ?? 365);
-  } catch (e) {
-    console.warn("[score] queryApass failed", address, e);
-  }
+  const apass = await queryApassStatus(cv, address);
+  if (apass.requestId) requestIds.push(apass.requestId);
+  const frozen = apass.status === 2;
+  const tenureDays = apass.tenureDays;
 
-  // CCP / TR proxies — real query_txs when history exists; fresh operators default 100
+  // CCP eligibility: validator pool when configured; else query_txs proxy (not AML)
   let clean = 1;
   let total = 1;
+  const validator = await checkValidatorEligibility(cv, address);
+  if (!validator.skipped && validator.valid !== undefined) {
+    total = 1;
+    clean = validator.valid ? 1 : 0;
+    if (validator.requestId) requestIds.push(validator.requestId);
+  }
+
+  // Travel Rule completeness proxy via query_txs history length
   let trOk = 1;
   let trTotal = 1;
   try {
@@ -69,10 +70,13 @@ export async function tickScore(address: `0x${string}`) {
     requestIds.push(txs.requestId);
     const items = (txs.data as { items?: unknown[] })?.items ?? [];
     if (items.length > 0) {
-      total = items.length;
-      clean = items.length; // success rows counted clean until AML feed exists (CV-6)
       trTotal = items.length;
       trOk = items.length;
+      // If no validator pool, keep prior query_txs-as-clean heuristic (conceptual AML)
+      if (validator.skipped) {
+        total = items.length;
+        clean = items.length;
+      }
     }
   } catch {
     /* keep defaults */
@@ -101,7 +105,9 @@ export async function tickScore(address: `0x${string}`) {
   const transport = http(process.env.MONAD_RPC_URL);
   const wallet = createWalletClient({ account, chain, transport });
   const publicClient = createPublicClient({ chain, transport });
-  const inputsHash = keccak256(toBytes(JSON.stringify({ address, frozen, ...result, requestIds })));
+  const inputsHash = keccak256(
+    toBytes(JSON.stringify({ address, frozen, apass, validator, ...result, requestIds })),
+  );
 
   const hash = await wallet.writeContract({
     address: d.contracts.ScoreStore as `0x${string}`,

@@ -26,7 +26,12 @@ import {
 } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { computeScore, demoInputs88 } from "../score.js";
-import { ensureApass as ensureApassHelper } from "../lib/cleanverse-helpers.js";
+import {
+  ensureApass as ensureApassHelper,
+  downloadTravelRuleForTx,
+  requireComplianceForAction,
+  settlementAtoken,
+} from "../lib/cleanverse-helpers.js";
 import { setScore as setScoreHelper } from "../lib/chain-helpers.js";
 import {
   appendDemoEvent,
@@ -726,8 +731,8 @@ export class DemoOrchestrator {
     try {
       await this.getCv().verifyApass({
         chain: "monad",
+        atoken: token,
         address: maint.address,
-        tokenAddress: token,
       });
       const maintAgent = this.agent(
         ctx,
@@ -745,21 +750,25 @@ export class DemoOrchestrator {
       this.log(runId, "normalOps", "inspection.skip", String(e instanceof Error ? e.message : e));
     }
 
-    // Travel Rule best-effort on A-Token transfer hashes
-    const travelUrls: Array<{ txHash: string; url?: string; error?: string }> = [];
+    // Travel Rule reports for A-Token transfer hashes (docs: wallet + txHash required)
+    const travelUrls: Array<{
+      txHash: string;
+      downloadUrl?: string;
+      fileName?: string;
+      error?: string;
+    }> = [];
     for (const txHash of [distTx, ...(inspectionTx ? [inspectionTx] : [])]) {
-      try {
-        const tr = await this.getCv().downloadTravelRule({ chain: "monad", txHash });
-        travelUrls.push({
-          txHash,
-          url: (tr.data as { downloadUrl?: string })?.downloadUrl,
-        });
-      } catch (e) {
-        travelUrls.push({
-          txHash,
-          error: e instanceof Error ? e.message : String(e),
-        });
-      }
+      const tr = await downloadTravelRuleForTx(this.getCv(), txHash, energy.address);
+      travelUrls.push(tr);
+      this.log(
+        runId,
+        "normalOps",
+        tr.downloadUrl ? "travel_rule.ok" : "travel_rule.skip",
+        tr.downloadUrl
+          ? `Travel Rule report ready for ${txHash.slice(0, 10)}…`
+          : `Travel Rule unavailable for tx`,
+        tr,
+      );
     }
 
     this.log(runId, "normalOps", "revenue.distribute", "Revenue + oracle done", {
@@ -877,6 +886,8 @@ export class DemoOrchestrator {
     const listPrice = parseUnits("500", DECIMALS);
     const { wallet } = walletFor(ctx, replacement.privateKey as Hex);
 
+    await requireComplianceForAction(this.getCv(), replacement.address);
+
     const repScore = computeScore({
       ...demoInputs88(replacement.address, false),
       travelRuleCompleteTransfers: 5,
@@ -906,6 +917,15 @@ export class DemoOrchestrator {
       args: [maintLorId],
     });
     await waitTx(ctx, acqTx);
+
+    const travel = await downloadTravelRuleForTx(this.getCv(), acqTx, replacement.address);
+    this.log(
+      runId,
+      "replacementAcquire",
+      travel.downloadUrl ? "travel_rule.ok" : "travel_rule.skip",
+      travel.downloadUrl ? "Travel Rule report for acquire" : "Travel Rule unavailable for acquire",
+      travel,
+    );
 
     const cv = this.getCv();
     await cv
@@ -954,6 +974,18 @@ export class DemoOrchestrator {
       },
       settlement: { token: run.settlementToken, mode: run.settlementMode },
       freezeFormula: { demo: "raw 88 → frozen 31", multiplier: 0.35 },
+      cleanverse: {
+        atoken: settlementAtoken(),
+        travelRule: events
+          .filter((e) => e.kind === "travel_rule.ok" || e.kind === "travel_rule.skip")
+          .map((e) => {
+            try {
+              return { kind: e.kind, ...(JSON.parse(e.payload) as object) };
+            } catch {
+              return { kind: e.kind, payload: e.payload };
+            }
+          }),
+      },
       events: events.map((e) => ({
         id: e.id,
         step: e.step,

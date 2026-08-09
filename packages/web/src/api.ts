@@ -232,6 +232,37 @@ export function ensureApass() {
   return apiAuthPost<{ ok: boolean; address: string; apass: unknown }>("/v1/apass/ensure");
 }
 
+export function listApasses(page = 1, pageSize = 20) {
+  return apiAuthGet<{ ok: boolean; items?: unknown[]; total?: number }>(
+    `/v1/apass/list?page=${page}&pageSize=${pageSize}`,
+  );
+}
+
+export function getDepositAddress(address: string) {
+  return apiAuthGet<{ ok: boolean; data: unknown }>(`/v1/deposit-address/${address}`);
+}
+
+export function getInstitutionWhitelist(symbol?: string) {
+  return apiAuthGet<{ ok: boolean; data: unknown }>(
+    `/v1/institution/whitelist${symbol ? `?symbol=${encodeURIComponent(symbol)}` : ""}`,
+  );
+}
+
+export function getAtokenRules() {
+  return apiAuthGet<{ ok: boolean; data: unknown }>("/v1/atoken/rules");
+}
+
+export function ensureAtokenSgRule() {
+  return apiAuthPost<{ ok: boolean; added: boolean }>("/v1/atoken/rules/ensure-sg");
+}
+
+export function downloadTravelRule(txHash: string, address?: string) {
+  return apiAuthPost<{ ok: boolean; downloadUrl?: string; error?: string }>("/v1/travel-rule", {
+    txHash,
+    address,
+  });
+}
+
 export function pushScore(address?: string) {
   return apiAuthPost<{ ok: boolean; address: string; score: number; tx: string }>("/v1/scores/push", address ? { address } : undefined);
 }

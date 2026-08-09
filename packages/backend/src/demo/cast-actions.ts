@@ -16,6 +16,10 @@ import {
   freezeWallet,
   activateWallet,
   queryApassStatus,
+  requireComplianceForAction,
+  requireValidApass,
+  downloadTravelRuleForTx,
+  JURISDICTION_SG as CV_JURISDICTION_SG,
 } from "../lib/cleanverse-helpers.js";
 import {
   setScore,
@@ -62,7 +66,7 @@ import type { DemoOrchestrator } from "./orchestrator.js";
 const DECIMALS = 6;
 const SCOPE_ENERGY = keccak256(toBytes("energy-revenue"));
 const SCOPE_MAINT = keccak256(toBytes("maintenance"));
-const JURISDICTION_SG = keccak256(toBytes("SG"));
+const JURISDICTION_SG = CV_JURISDICTION_SG;
 
 /** In-process lock so concurrent Seed clicks don't double-mint. */
 const seedingRuns = new Set<string>();
@@ -306,6 +310,8 @@ export async function executeCastAct(
     const owner = requireRole(db, runId, "owner");
     actors.push({ role: "owner", address: owner.address });
     actors.push({ role: "holder", address: holderAddr });
+    const cv = clientFromEnv();
+    await requireComplianceForAction(cv, holderAddr);
     const result = await mintLOR(ctx, assetId, holderAddr, scopeHash(scope), minScore);
     txs.push({ label: "mintLOR", hash: result.tx });
     ids = { lorId: result.lorId.toString(), scope };
@@ -418,6 +424,9 @@ export async function executeCastAct(
       args: [mandateId],
     });
     const stakeAmount = man[4] as bigint;
+    const jurisdictionRoot = man[3] as Hex;
+    const cv = clientFromEnv();
+    await requireComplianceForAction(cv, bidder.address, { jurisdictionRoot });
     const { wallet } = walletFor(ctx, bidder.privateKey as Hex);
     const approveHash = await write(wallet, {
       address: token,
@@ -447,6 +456,8 @@ export async function executeCastAct(
     const token = settlementToken(run);
     const grossHuman = String(args.gross ?? "180000");
     const gross = parseUnits(grossHuman, DECIMALS);
+    const cv = clientFromEnv();
+    await requireComplianceForAction(cv, op.address);
     // Mint gross to operator so distribute can pull
     const mintHash = await write(ctx.deployerWallet, {
       address: token,
@@ -473,10 +484,25 @@ export async function executeCastAct(
     });
     await waitTx(ctx, distHash);
     txs.push({ label: "distribute", hash: distHash });
+    const travel = await downloadTravelRuleForTx(cv, distHash, op.address);
+    appendDemoEvent(
+      db,
+      runId,
+      travel.downloadUrl ? "travel_rule.ok" : "travel_rule.skip",
+      travel.downloadUrl
+        ? `Travel Rule report for distribute ${distHash.slice(0, 10)}…`
+        : `Travel Rule unavailable for tx`,
+      { ...travel },
+      null,
+    );
     // Oracle tick
     const oracleHash = await recordOraclePrice(ctx, CATEGORY_SOLAR, parseUnits("1200", DECIMALS));
     txs.push({ label: "oracle record", hash: oracleHash });
-    ids = { gross: grossHuman };
+    ids = {
+      gross: grossHuman,
+      travelUrl: travel.downloadUrl ?? "",
+      travelError: travel.error ?? "",
+    };
     summary = `Distributed ${grossHuman} oCVA for ${role}`;
   } else if (action === "freeze" || action === "activate") {
     const targetRole = (args.targetRole as DemoRole) || "maintOp";
@@ -562,13 +588,21 @@ export async function executeCastAct(
     // oCVA transferFrom pays the current holder. Frozen/inactive A-Pass reverts
     // APassNotActive(address) (0x322fde89) — temporarily activate seller to settle.
     const cv = clientFromEnv();
+    await requireComplianceForAction(cv, buyer.address);
     const sellerApass = await queryApassStatus(cv, seller);
     const sellerWasFrozen = sellerApass.status === 2;
     await ensureApass(cv, ctx.publicClient, seller, "seller");
+    // Seller must be able to receive oCVA after ensure
+    await requireValidApass(cv, seller);
     const score = computeScore({
-      ...demoInputs88(buyer.address, false),
+      address: buyer.address,
+      tenureDays: (await queryApassStatus(cv, buyer.address)).tenureDays,
+      cleanScreeningEvents: 10,
+      totalScreeningEvents: 10,
       travelRuleCompleteTransfers: 5,
       crossBorderTransfers: 5,
+      frozen: false,
+      requestIds: ["cast-acq"],
     });
     const scoreTx = await setScore(ctx, buyer.address as Hex, score.score, "cast-acq");
     txs.push({ label: "setScore buyer", hash: scoreTx });
@@ -589,6 +623,17 @@ export async function executeCastAct(
     });
     await waitTx(ctx, acqHash);
     txs.push({ label: "acquireLOR", hash: acqHash });
+    const travel = await downloadTravelRuleForTx(cv, acqHash, buyer.address);
+    appendDemoEvent(
+      db,
+      runId,
+      travel.downloadUrl ? "travel_rule.ok" : "travel_rule.skip",
+      travel.downloadUrl
+        ? `Travel Rule report for acquire ${acqHash.slice(0, 10)}…`
+        : `Travel Rule unavailable for tx`,
+      { ...travel },
+      null,
+    );
     if (sellerWasFrozen) {
       await freezeWallet(cv, seller, "Opera demo: re-freeze seller after acquire settlement").catch(
         () => undefined,
@@ -600,6 +645,7 @@ export async function executeCastAct(
       buyer: buyer.address,
       seller,
       sellerWasFrozen: String(sellerWasFrozen),
+      travelUrl: travel.downloadUrl ?? "",
     };
     await hydrateLorFromChain(db, Number(lorId), { txHash: acqHash });
     summary = `${buyerRole} acquired LOR #${lorId}`;
