@@ -110,12 +110,22 @@ export function loadOperaAtokenAddress(): Hex {
   return OPERA_ATOKEN;
 }
 
+/** Same CREATE2 address as Ethereum; deployed on Monad testnet + mainnet. */
+export const MULTICALL3_ADDRESS =
+  "0xcA11bde05977b3631167028862bE2a173976CA11" as const;
+
 export function monadChain(rpcUrl: string) {
   return {
     id: 10143,
     name: "Monad Testnet",
     nativeCurrency: { name: "MON", symbol: "MON", decimals: 18 },
     rpcUrls: { default: { http: [rpcUrl] } },
+    contracts: {
+      multicall3: {
+        address: MULTICALL3_ADDRESS,
+        blockCreated: 0,
+      },
+    },
   } as const;
 }
 

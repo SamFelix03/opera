@@ -41,6 +41,12 @@ function monadChain(rpcUrl: string) {
     name: "Monad Testnet",
     nativeCurrency: { name: "MON", symbol: "MON", decimals: 18 },
     rpcUrls: { default: { http: [rpcUrl] } },
+    contracts: {
+      multicall3: {
+        address: "0xcA11bde05977b3631167028862bE2a173976CA11" as const,
+        blockCreated: 0,
+      },
+    },
   } as const;
 }
 
