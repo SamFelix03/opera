@@ -7,9 +7,13 @@ export async function registerSiweRoutes(app: FastifyInstance, db: Database.Data
     const q = req.query as { address?: string };
     if (!q.address) return reply.code(400).send({ error: "address required" });
     const nonce = generateNonce();
+    // Fresh nonce clears verified until /auth/verify succeeds.
     db.prepare(
-      `INSERT INTO sessions (address, nonce) VALUES (?, ?)
-       ON CONFLICT(address) DO UPDATE SET nonce=excluded.nonce, created_at=datetime('now')`,
+      `INSERT INTO sessions (address, nonce, verified) VALUES (?, ?, 0)
+       ON CONFLICT(address) DO UPDATE SET
+         nonce=excluded.nonce,
+         verified=0,
+         created_at=datetime('now')`,
     ).run(q.address.toLowerCase(), nonce);
     return { nonce };
   });
@@ -33,16 +37,27 @@ export async function registerSiweRoutes(app: FastifyInstance, db: Database.Data
       return reply.code(401).send({ error: "invalid signature" });
     }
 
-    // Rotate nonce after success
-    db.prepare(`UPDATE sessions SET nonce = ? WHERE address = ?`).run(
-      generateNonce(),
-      message.address.toLowerCase(),
-    );
+    // Rotate nonce and mark session verified.
+    db.prepare(
+      `UPDATE sessions SET nonce = ?, verified = 1, created_at = datetime('now') WHERE address = ?`,
+    ).run(generateNonce(), message.address.toLowerCase());
 
     return {
       ok: true,
       address: message.address,
       chainId: message.chainId,
     };
+  });
+
+  app.get("/auth/session", async (req, reply) => {
+    const q = req.query as { address?: string };
+    if (!q.address) return reply.code(400).send({ error: "address required" });
+    const row = db
+      .prepare(`SELECT address, verified FROM sessions WHERE address = ?`)
+      .get(q.address.toLowerCase()) as { address: string; verified: number } | undefined;
+    if (!row || !row.verified) {
+      return { ok: false, authenticated: false };
+    }
+    return { ok: true, authenticated: true, address: row.address };
   });
 }

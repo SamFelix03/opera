@@ -30,6 +30,7 @@ export function openAuditDb(path: string): Database.Database {
     CREATE TABLE IF NOT EXISTS sessions (
       address TEXT PRIMARY KEY,
       nonce TEXT NOT NULL,
+      verified INTEGER NOT NULL DEFAULT 0,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
     CREATE TABLE IF NOT EXISTS scores (
@@ -55,6 +56,11 @@ export function openAuditDb(path: string): Database.Database {
     CREATE INDEX IF NOT EXISTS idx_notifications_addr
       ON notifications(address, id DESC);
   `);
+  // Migrate older DBs that predate the verified column.
+  const cols = db.prepare(`PRAGMA table_info(sessions)`).all() as Array<{ name: string }>;
+  if (!cols.some((c) => c.name === "verified")) {
+    db.exec(`ALTER TABLE sessions ADD COLUMN verified INTEGER NOT NULL DEFAULT 0`);
+  }
   return db;
 }
 
