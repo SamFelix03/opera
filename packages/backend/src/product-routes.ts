@@ -11,6 +11,7 @@ import { insertAuditEvent } from "./db.js";
 import { ensureApass, queryApassStatus, freezeWallet, activateWallet } from "./lib/cleanverse-helpers.js";
 import { setScore, mintLOR, autoListLOR, recordOraclePrice } from "./lib/chain-helpers.js";
 import { hydrateLorFromChain, upsertLor } from "./chain-index.js";
+import { maybeAutoListForAddress } from "./demo/auto-list.js";
 import { computeScore, type ScoreInputs } from "./score.js";
 
 function requireSession(
@@ -171,7 +172,17 @@ export async function registerProductRoutes(
       inputs: JSON.stringify({ ...result }),
     });
     insertAuditEvent(db, { kind: "product.score.push", payload: JSON.stringify({ target, score: result.score, tx }) });
-    return { ok: true, address: target, score: result.score, tx };
+    let listed: string[] = [];
+    try {
+      const al = await maybeAutoListForAddress(db, target);
+      listed = al.listed.map(String);
+      for (const id of al.listed) {
+        await hydrateLorFromChain(db, Number(id));
+      }
+    } catch (e) {
+      console.warn("[product] auto-list after score push failed", e);
+    }
+    return { ok: true, address: target, score: result.score, tx, listedLorIds: listed };
   });
 
   app.post("/v1/lors/mint", async (req: FastifyRequest, reply: FastifyReply) => {

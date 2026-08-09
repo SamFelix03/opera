@@ -46,10 +46,23 @@ export function PlaygroundPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pushTx, setPushTx] = useState<string | null>(null);
+  const [liveTarget, setLiveTarget] = useState("");
   const siwe = useSiweSession();
   const cast = useCast();
 
+  // Prefill from selected cast role when available.
+  useEffect(() => {
+    if (!cast.active) return;
+    const addr =
+      cast.selectedAddress ??
+      cast.roles.find((r) => r.role === "maintOp")?.address ??
+      "";
+    if (addr) setLiveTarget(addr);
+  }, [cast.active, cast.selectedAddress, cast.roles]);
+
   const liveThreshold = cfg?.autoListThreshold ?? null;
+  const targetOk = /^0x[a-fA-F0-9]{40}$/.test(liveTarget.trim());
+  const liveArgs = { target: liveTarget.trim() };
 
   async function loadConfig() {
     try {
@@ -218,33 +231,58 @@ export function PlaygroundPage() {
 
           {cast.active ? (
             <section className="panel">
-              <h2>Live cast freeze</h2>
+              <h2>Live compliance actions</h2>
               <p className="muted">
-                Run the real sanctions path against the cast maintenance operator — not a
-                simulation. Select Regulator in the cast bar first.
+                Freeze / push score / activate against any address. After a low score push, LORs
+                held by that wallet are auto-listed when score &lt; threshold ({liveThreshold ?? "…"}).
               </p>
+              <label htmlFor="live-target">Operator address</label>
+              <input
+                id="live-target"
+                value={liveTarget}
+                onChange={(e) => setLiveTarget(e.target.value.trim())}
+                placeholder="0x…"
+                spellCheck={false}
+              />
+              <div className="chip-row" style={{ margin: "0.5rem 0 0.85rem" }}>
+                {cast.roles
+                  .filter((r) => /op|replacement/i.test(r.role) && r.address)
+                  .map((r) => (
+                    <button
+                      key={r.role}
+                      type="button"
+                      className={`picker-chip${liveTarget.toLowerCase() === r.address.toLowerCase() ? " active" : ""}`}
+                      onClick={() => setLiveTarget(r.address)}
+                    >
+                      {r.label ?? r.role}
+                    </button>
+                  ))}
+              </div>
               <div className="row-actions">
                 <CastActionButton
                   action="freeze"
                   role="regulator"
                   requireRole="regulator"
-                  args={{ targetRole: "maintOp" }}
-                  label="Freeze maint A-Pass"
+                  args={liveArgs}
+                  label="Freeze A-Pass"
                   className="btn secondary"
+                  disabled={!targetOk}
                 />
                 <CastActionButton
                   action="pushScore"
                   role="regulator"
-                  args={{ targetRole: "maintOp" }}
-                  label="Push frozen score"
+                  args={liveArgs}
+                  label="Push score (+ auto-list if low)"
+                  disabled={!targetOk}
                 />
                 <CastActionButton
                   action="activate"
                   role="regulator"
                   requireRole="regulator"
-                  args={{ targetRole: "maintOp" }}
-                  label="Activate maint A-Pass"
+                  args={liveArgs}
+                  label="Activate A-Pass"
                   className="btn ghost"
+                  disabled={!targetOk}
                 />
               </div>
             </section>

@@ -47,13 +47,24 @@ export async function autoListLOR(
   lorId: bigint,
   listPrice: bigint,
 ): Promise<Hex> {
+  // Explicit UI/cast listing must actually list. maybeAutoList is a silent no-op when
+  // score >= threshold, which made portfolio "Auto-list" look successful while Market stayed empty.
   const hash = await write(ctx.deployerWallet, {
     address: ctx.deployment.contracts.LORRegistry,
     abi: lorAbi,
-    functionName: "maybeAutoList",
+    functionName: "setAutoListed",
     args: [lorId, listPrice],
   });
   await waitTx(ctx, hash);
+  const row = await ctx.publicClient.readContract({
+    address: ctx.deployment.contracts.LORRegistry,
+    abi: lorAbi,
+    functionName: "lors",
+    args: [lorId],
+  });
+  if (!row[4]) {
+    throw new Error(`LOR #${lorId} still not auto-listed after setAutoListed`);
+  }
   return hash;
 }
 

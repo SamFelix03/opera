@@ -5,16 +5,12 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import type Database from "better-sqlite3";
 import {
-  bootstrapLorsFromChain,
-  bootstrapMandatesFromChain,
   hydrateBidsFromChain,
   hydrateLorFromChain,
   hydrateMandateFromChain,
   listIndexedBids,
   listIndexedLors,
   listIndexedMandates,
-  lorCount,
-  mandateCount,
 } from "./chain-index.js";
 import {
   CATEGORY_SOLAR,
@@ -26,28 +22,11 @@ import {
 } from "./demo/chain.js";
 import { insertAuditEvent } from "./db.js";
 
-let bootstrapping = false;
-
-async function ensureIndexWarm(db: Database.Database): Promise<void> {
-  if (bootstrapping) return;
-  if (mandateCount(db) > 0 && lorCount(db) > 0) return;
-  bootstrapping = true;
-  try {
-    if (mandateCount(db) === 0) await bootstrapMandatesFromChain(db, 200);
-    if (lorCount(db) === 0) await bootstrapLorsFromChain(db, 200);
-  } catch (e) {
-    console.warn("[chain-routes] bootstrap failed", e);
-  } finally {
-    bootstrapping = false;
-  }
-}
-
 export async function registerChainRoutes(
   app: FastifyInstance,
   db: Database.Database,
 ) {
   app.get("/lors", async (req: FastifyRequest) => {
-    await ensureIndexWarm(db);
     const q = req.query as { listed?: string; limit?: string; holder?: string };
     const listedOnly = q.listed === "1" || q.listed === "true";
     const limit = Math.min(Number(q.limit ?? 50), 200);
@@ -59,19 +38,20 @@ export async function registerChainRoutes(
       limit,
     });
 
-    let autoListThreshold = 0;
     let settlementToken: string | undefined;
+    let autoListThreshold = 72;
     try {
       const ctx = createChainCtx();
       settlementToken = ctx.deployment.settlementToken;
-      const threshold = await ctx.publicClient.readContract({
-        address: ctx.deployment.contracts.LORRegistry,
-        abi: lorAbi,
-        functionName: "autoListThreshold",
-      });
-      autoListThreshold = Number(threshold);
+      autoListThreshold = Number(
+        await ctx.publicClient.readContract({
+          address: ctx.deployment.contracts.LORRegistry,
+          abi: lorAbi,
+          functionName: "autoListThreshold",
+        }),
+      );
     } catch {
-      /* threshold is decorative; list still works from SQLite */
+      /* list still works from SQLite */
     }
 
     return {
@@ -84,7 +64,6 @@ export async function registerChainRoutes(
   });
 
   app.get("/mandates", async (req: FastifyRequest) => {
-    await ensureIndexWarm(db);
     const q = req.query as { open?: string; limit?: string; publisher?: string };
     const openOnly = q.open === "1" || q.open === "true";
     const limit = Math.min(Number(q.limit ?? 50), 200);

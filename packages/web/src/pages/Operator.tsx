@@ -580,7 +580,7 @@ function OperatorBody({ tab }: { tab: OpTab }) {
                     <CastActionButton
                       action="autoList"
                       args={{ lorId: lor.lorId }}
-                      label="Auto-list this LOR"
+                      label="List on Market (cast)"
                       className="btn secondary"
                     />
                   </div>

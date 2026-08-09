@@ -30,6 +30,7 @@ import {
   upsertMandate,
   upsertLor,
 } from "../chain-index.js";
+import { maybeAutoListForAddress } from "./auto-list.js";
 import { clientFromEnv } from "@opera/cleanverse-client";
 import {
   createChainCtx,
@@ -510,8 +511,26 @@ export async function executeCastAct(
     const result = computeScore(demoInputs88(target, frozen));
     const hash = await setScore(ctx, target, result.score, `cast-${frozen ? "frozen" : "live"}`);
     txs.push({ label: "setScore", hash });
-    ids = { target, score: String(result.score), frozen: String(frozen) };
-    summary = `Pushed score ${result.score} for ${targetRole} (frozen=${frozen})`;
+    let listedIds: string[] = [];
+    try {
+      const listed = await maybeAutoListForAddress(db, target);
+      listedIds = listed.listed.map(String);
+      for (const tx of listed.txs) {
+        txs.push({ label: "maybeAutoList", hash: tx });
+      }
+    } catch (e) {
+      console.warn("[cast] auto-list after pushScore failed", e);
+    }
+    ids = {
+      target,
+      score: String(result.score),
+      frozen: String(frozen),
+      listedLorIds: listedIds.join(",") || "none",
+    };
+    summary =
+      listedIds.length > 0
+        ? `Pushed score ${result.score} for ${targetRole} (frozen=${frozen}); auto-listed LOR(s) ${listedIds.join(", ")}`
+        : `Pushed score ${result.score} for ${targetRole} (frozen=${frozen})`;
   } else if (action === "autoList") {
     const run = getDemoRun(db, runId)!;
     const lorId = BigInt(String(args.lorId ?? run.maintLorId));
@@ -519,10 +538,10 @@ export async function executeCastAct(
     const ctx = createChainCtx();
     const price = parseUnits(String(args.listPrice ?? "500"), DECIMALS);
     const hash = await autoListLOR(ctx, lorId, price);
-    txs.push({ label: "autoList", hash });
-    ids = { lorId: lorId.toString(), listPrice: String(args.listPrice ?? "500") };
+    txs.push({ label: "setAutoListed", hash });
+    ids = { lorId: lorId.toString(), listPrice: String(args.listPrice ?? "500"), autoListed: "true" };
     await hydrateLorFromChain(db, Number(lorId), { txHash: hash });
-    summary = `Auto-listed LOR #${lorId}`;
+    summary = `Listed LOR #${lorId} on the transfer market`;
   } else if (action === "acquire") {
     const buyerRole = (role as DemoRole) || "replacement";
     const buyer = requireRole(db, runId, buyerRole);
