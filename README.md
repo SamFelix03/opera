@@ -29,8 +29,6 @@ Built on Monad · Powered by the Cleanverse Compliance Stack
 
 ### Deployed contracts (Monad Testnet · chainId `10143`)
 
-Explorer: [https://testnet.monadvision.com](https://testnet.monadvision.com) · RPC: `https://testnet-rpc.monad.xyz`
-
 
 | Contract                                        | Address                                                                                                                            |
 | ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
