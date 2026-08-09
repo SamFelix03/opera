@@ -518,15 +518,21 @@ function OwnerBody({ tab }: { tab: OwnerTab }) {
                 <p style={{ fontSize: "0.85rem" }}>Publish one on the left to get started.</p>
               </div>
             ) : (
-              <div className="card-list">
+              <div className="mandate-list">
                 {mine.map((m) => {
                   const canAward = m.open && !m.awarded;
                   const isSelected =
                     awardOpen && selectedMandate?.mandateId === m.mandateId;
+                  const status = m.awarded ? "Awarded" : m.open ? "Open" : "Closed";
+                  const statusClass = m.awarded
+                    ? "partial"
+                    : m.open
+                      ? "full"
+                      : "suspended";
                   return (
                     <button
                       type="button"
-                      className={`lor-card selectable${isSelected ? " selected" : ""}${canAward ? "" : " readonly-card"}`}
+                      className={`mandate-row${isSelected ? " selected" : ""}${canAward ? "" : " readonly"}`}
                       key={m.mandateId}
                       disabled={!canAward}
                       onClick={() => {
@@ -535,28 +541,41 @@ function OwnerBody({ tab }: { tab: OwnerTab }) {
                         setAwardOpen(true);
                       }}
                     >
-                      <div className="lor-card-header">
-                        <strong>Mandate #{m.mandateId}</strong>
-                        <span
-                          className={`yield-band ${m.awarded ? "partial" : m.open ? "full" : "suspended"}`}
-                        >
-                          {m.awarded ? "Awarded" : m.open ? "Open" : "Closed"}
-                        </span>
+                      <div>
+                        <div className="mandate-row-top">
+                          <span className="mandate-row-id">Mandate #{m.mandateId}</span>
+                          <span className={`yield-band ${statusClass}`}>{status}</span>
+                        </div>
+                        <div className="mandate-row-stats">
+                          <div className="mandate-stat">
+                            <span className="mandate-stat-label">Scope</span>
+                            <span className="mandate-stat-value">{m.scope}</span>
+                          </div>
+                          <div className="mandate-stat">
+                            <span className="mandate-stat-label">Min score</span>
+                            <span className="mandate-stat-value">{m.minScore}</span>
+                          </div>
+                          <div className="mandate-stat">
+                            <span className="mandate-stat-label">Stake</span>
+                            <span className="mandate-stat-value">
+                              {formatUnits6(m.stakeAmount)} oCVA
+                            </span>
+                          </div>
+                          <div className="mandate-stat">
+                            <span className="mandate-stat-label">
+                              {m.awarded ? "Winner" : "Publisher"}
+                            </span>
+                            <span className="mandate-stat-value mono">
+                              {m.awarded && m.winner
+                                ? shortAddr(m.winner)
+                                : shortAddr(m.publisher)}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="lor-card-meta">
-                        <span>{m.scope}</span>
-                        <span>Min score {m.minScore}</span>
-                        <span>Stake {formatUnits6(m.stakeAmount)}</span>
-                      </div>
-                      {m.awarded && m.winner ? (
-                        <p className="mono muted" style={{ fontSize: "0.75rem", margin: "0.35rem 0 0" }}>
-                          Winner {shortAddr(m.winner)}
-                        </p>
-                      ) : canAward ? (
-                        <p className="muted" style={{ fontSize: "0.75rem", margin: "0.35rem 0 0" }}>
-                          Select to award →
-                        </p>
-                      ) : null}
+                      <span className="mandate-row-cta">
+                        {canAward ? "Award" : m.awarded ? "Awarded" : "Closed"}
+                      </span>
                     </button>
                   );
                 })}

@@ -381,7 +381,7 @@ function OperatorBody({ tab }: { tab: OpTab }) {
           <div className="split-list-head">
             <h2>Open mandates</h2>
             <span className="muted" style={{ fontSize: "0.8rem" }}>
-              {openMandates?.length ?? 0} available · click to bid
+              {openMandates === null ? "…" : `${openMandates.length} available`}
             </span>
           </div>
 
@@ -400,31 +400,45 @@ function OperatorBody({ tab }: { tab: OpTab }) {
               </p>
             </div>
           ) : (
-            <div className="card-list bid-mandate-list">
+            <div className="mandate-list bid-mandate-list">
               {openMandates.map((m) => (
                 <button
                   type="button"
                   key={m.mandateId}
-                  className="lor-card selectable"
+                  className="mandate-row"
                   onClick={() => {
                     setBidId(m.mandateId);
                     setSelectedMandate(m);
                     setBidOpen(true);
                   }}
                 >
-                  <div className="lor-card-header">
-                    <strong>Mandate #{m.mandateId}</strong>
-                    <span className="yield-band full">Open</span>
+                  <div>
+                    <div className="mandate-row-top">
+                      <span className="mandate-row-id">Mandate #{m.mandateId}</span>
+                      <span className="yield-band full">Open</span>
+                    </div>
+                    <div className="mandate-row-stats">
+                      <div className="mandate-stat">
+                        <span className="mandate-stat-label">Scope</span>
+                        <span className="mandate-stat-value">{m.scope}</span>
+                      </div>
+                      <div className="mandate-stat">
+                        <span className="mandate-stat-label">Min score</span>
+                        <span className="mandate-stat-value">{m.minScore}</span>
+                      </div>
+                      <div className="mandate-stat">
+                        <span className="mandate-stat-label">Stake</span>
+                        <span className="mandate-stat-value">
+                          {formatUnits6(m.stakeAmount)} oCVA
+                        </span>
+                      </div>
+                      <div className="mandate-stat">
+                        <span className="mandate-stat-label">Owner</span>
+                        <span className="mandate-stat-value mono">{shortAddr(m.publisher)}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="lor-card-meta">
-                    <span>{m.scope}</span>
-                    <span>Min score {m.minScore}</span>
-                    <span>Stake {formatUnits6(m.stakeAmount)} oCVA</span>
-                    <span className="mono">Owner {shortAddr(m.publisher)}</span>
-                  </div>
-                  <p className="muted" style={{ fontSize: "0.75rem", margin: "0.4rem 0 0" }}>
-                    Select to place bid →
-                  </p>
+                  <span className="mandate-row-cta">Place bid</span>
                 </button>
               ))}
             </div>

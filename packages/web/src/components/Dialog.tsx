@@ -29,7 +29,7 @@ export function Dialog({
 
   return (
     <div className="dialog-root" role="presentation">
-      <button type="button" className="dialog-backdrop" aria-label="Close dialog" onClick={onClose} />
+      <div className="dialog-backdrop" onClick={onClose} aria-hidden="true" />
       <div
         className="dialog-panel"
         role="dialog"
