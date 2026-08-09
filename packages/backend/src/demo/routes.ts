@@ -8,7 +8,12 @@ import {
   listNotifications,
   type DemoStepName,
 } from "./state.js";
-import { CAST_ACTIONS, executeCastAct, getCastSnapshot } from "./cast-actions.js";
+import {
+  CAST_ACTIONS,
+  beginSeedInBackground,
+  executeCastAct,
+  getCastSnapshot,
+} from "./cast-actions.js";
 import { readFileSync, existsSync } from "node:fs";
 
 export async function registerDemoRoutes(
@@ -52,6 +57,11 @@ export async function registerDemoRoutes(
       return reply.code(400).send({ error: "action required", allowed: CAST_ACTIONS });
     }
     try {
+      // Seed is long-running (many chain + Cleanverse calls) and trips nginx 504s
+      // if awaited. Accept immediately and let the client poll /cast.
+      if (body.action === "seed") {
+        return beginSeedInBackground(db, orch(), runId);
+      }
       const result = await executeCastAct(db, orch(), runId, body);
       return result;
     } catch (e) {

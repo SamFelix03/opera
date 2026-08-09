@@ -43,9 +43,11 @@ import {
   listDemoEvents,
   listDemoRoles,
   listStepStatuses,
+  setStepStatus,
   updateDemoRun,
   appendDemoEvent,
   type DemoRole,
+  type DemoStepName,
 } from "./state.js";
 import type { DemoOrchestrator } from "./orchestrator.js";
 
@@ -53,6 +55,11 @@ const DECIMALS = 6;
 const SCOPE_ENERGY = keccak256(toBytes("energy-revenue"));
 const SCOPE_MAINT = keccak256(toBytes("maintenance"));
 const JURISDICTION_SG = keccak256(toBytes("SG"));
+
+/** In-process lock so concurrent Seed clicks don't double-mint. */
+const seedingRuns = new Set<string>();
+
+const SEED_STEPS: DemoStepName[] = ["setupIdentities", "setupAsset", "fundAndStake"];
 
 export const CAST_ACTIONS = [
   "seed",
@@ -83,7 +90,28 @@ export type CastActResult = {
   txs: CastTx[];
   ids?: Record<string, string>;
   run: ReturnType<DemoOrchestrator["getRun"]>;
+  /** True when seed was accepted and is running in the background. */
+  accepted?: boolean;
+  seeding?: boolean;
 };
+
+export function isSeedInProgress(runId: string): boolean {
+  return seedingRuns.has(runId);
+}
+
+export function isSeedComplete(db: Database.Database, runId: string): boolean {
+  const steps = listStepStatuses(db, runId);
+  return steps.some((s) => s.step === "fundAndStake" && s.status === "done");
+}
+
+export function seedFailure(db: Database.Database, runId: string): string | null {
+  const steps = listStepStatuses(db, runId);
+  for (const step of SEED_STEPS) {
+    const row = steps.find((s) => s.step === step);
+    if (row?.status === "failed") return row.error || `${step} failed`;
+  }
+  return null;
+}
 
 function settlementToken(run: { settlementToken: string | null }): Hex {
   return (run.settlementToken as Hex) || loadOperaAtokenAddress();
@@ -195,9 +223,18 @@ export async function executeCastAct(
   const mock = process.env.DEMO_MOCK === "1";
 
   if (action === "seed") {
-    await orch.runStep(runId, "setupIdentities");
-    await orch.runStep(runId, "setupAsset");
-    const fund = (await orch.runStep(runId, "fundAndStake")) as Record<string, unknown>;
+    const steps = listStepStatuses(db, runId);
+    let fund: Record<string, unknown> | undefined;
+    for (const step of SEED_STEPS) {
+      const row = steps.find((s) => s.step === step);
+      if (row?.status === "done") continue;
+      // Recover from a previous timed-out/crashed attempt stuck on "running".
+      if (row?.status === "running") {
+        setStepStatus(db, runId, step, "pending");
+      }
+      const result = await orch.runStep(runId, step);
+      if (step === "fundAndStake") fund = result as Record<string, unknown>;
+    }
     for (const [k, v] of Object.entries(fund ?? {})) {
       if (typeof v === "string" && v.startsWith("0x") && v.length >= 66) {
         txs.push({ label: k, hash: v });
@@ -509,5 +546,95 @@ export async function executeCastAct(
     txs,
     ids,
     run: orch.getRun(runId),
+  };
+}
+
+/**
+ * Start seed in the background so proxies (nginx ~60–120s) don't 504.
+ * Client should poll GET /demo/:runId/cast until fundAndStake is done.
+ */
+export function beginSeedInBackground(
+  db: Database.Database,
+  orch: DemoOrchestrator,
+  runId: string,
+): CastActResult {
+  if (!getDemoRun(db, runId)) throw new Error(`unknown run ${runId}`);
+
+  const actors = listDemoRoles(db, runId).map((r) => ({
+    role: r.role,
+    address: r.address,
+  }));
+
+  if (isSeedComplete(db, runId)) {
+    const run = getDemoRun(db, runId)!;
+    return {
+      ok: true,
+      role: null,
+      action: "seed",
+      summary: "Cast already seeded",
+      actors,
+      txs: [],
+      ids: {
+        assetId: String(run.assetId ?? ""),
+        energyLorId: String(run.energyLorId ?? ""),
+        maintLorId: String(run.maintLorId ?? ""),
+        energyMandateId: String(run.energyMandateId ?? ""),
+        maintMandateId: String(run.maintMandateId ?? ""),
+      },
+      run: orch.getRun(runId),
+      accepted: false,
+      seeding: false,
+    };
+  }
+
+  if (seedingRuns.has(runId)) {
+    return {
+      ok: true,
+      role: null,
+      action: "seed",
+      summary: "Seed already in progress — poll cast until fundAndStake is done",
+      actors,
+      txs: [],
+      run: orch.getRun(runId),
+      accepted: true,
+      seeding: true,
+    };
+  }
+
+  seedingRuns.add(runId);
+  updateDemoRun(db, runId, { status: "seeding", currentStep: "setupIdentities" });
+  appendDemoEvent(
+    db,
+    runId,
+    "cast.seed",
+    "Seed accepted — running identities, asset setup, and fund/stake in background",
+    { accepted: true },
+    null,
+  );
+
+  void executeCastAct(db, orch, runId, { action: "seed" })
+    .then(() => {
+      updateDemoRun(db, runId, { status: "ready" });
+    })
+    .catch((e) => {
+      const msg = e instanceof Error ? e.message : String(e);
+      updateDemoRun(db, runId, { status: "seed_failed" });
+      appendDemoEvent(db, runId, "cast.seed.failed", msg, { error: msg }, null);
+    })
+    .finally(() => {
+      seedingRuns.delete(runId);
+    });
+
+  return {
+    ok: true,
+    role: null,
+    action: "seed",
+    summary:
+      "Seed started in background (2–5 min on Monad). Stay on Cast HQ — progress updates as steps finish.",
+    actors,
+    txs: [],
+    run: orch.getRun(runId),
+    accepted: true,
+    seeding: true,
   };
 }

@@ -106,14 +106,52 @@ export function CastProvider({ children }: { children: ReactNode }) {
       const boot = await bootstrapDemo({});
       setRunId(boot.runId);
       localStorage.setItem(RUN_KEY, boot.runId);
-      const result = await castAct(boot.runId, { action: "seed" });
-      setLastResult(result);
-      const snap = await getCast(boot.runId);
-      setCast(snap);
+      // Seed runs in the background on the API (avoids nginx 504). Poll until ready.
+      const accepted = await castAct(boot.runId, { action: "seed" });
+      setLastResult(accepted);
       setSelectedRole("owner");
-      const ev = await getDemoEvents(boot.runId);
-      setEvents(ev.events ?? []);
-      return result;
+
+      const deadline = Date.now() + 8 * 60_000;
+      let result = accepted;
+      while (Date.now() < deadline) {
+        const snap = await getCast(boot.runId);
+        setCast(snap);
+        const ev = await getDemoEvents(boot.runId);
+        setEvents(ev.events ?? []);
+
+        const byStep = Object.fromEntries(snap.steps.map((s) => [s.step, s]));
+        const failed =
+          byStep.setupIdentities?.status === "failed" ||
+          byStep.setupAsset?.status === "failed" ||
+          byStep.fundAndStake?.status === "failed";
+        if (failed) {
+          const err =
+            byStep.fundAndStake?.error ||
+            byStep.setupAsset?.error ||
+            byStep.setupIdentities?.error ||
+            "Seed failed";
+          throw new Error(err);
+        }
+        if (byStep.fundAndStake?.status === "done") {
+          result = {
+            ...accepted,
+            accepted: false,
+            seeding: false,
+            summary: "Cast seeded: identities, LORs, mandates, funds, and stakes",
+            ids: Object.fromEntries(
+              Object.entries(snap.ids ?? {})
+                .filter(([, v]) => v != null && v !== "")
+                .map(([k, v]) => [k, String(v)]),
+            ),
+          };
+          setLastResult(result);
+          return result;
+        }
+        await new Promise((r) => setTimeout(r, 2500));
+      }
+      throw new Error(
+        "Seed is still running after 8 minutes. Keep this tab open and refresh Cast HQ, or try Re-seed.",
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
       return null;

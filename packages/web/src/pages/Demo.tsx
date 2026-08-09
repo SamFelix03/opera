@@ -153,7 +153,8 @@ export function DemoPage() {
           <h1>Cast HQ</h1>
           <p className="lede">
             Seed the cast, pick who you are acting as, then run the story from Owner, Operator,
-            Market, Rules, and Audit.
+            Market, Rules, and Audit. Seed takes a few minutes (chain + Cleanverse) — leave this
+            tab open until the cast bar appears.
           </p>
         </div>
         <div className="page-actions">
@@ -163,7 +164,11 @@ export function DemoPage() {
             disabled={!!cast.busy}
             onClick={() => void cast.seedCast()}
           >
-            {cast.busy === "seed" ? "Seeding…" : cast.active ? "Re-seed cast" : "Seed cast"}
+            {cast.busy === "seed"
+              ? "Seeding… (2–5 min)"
+              : cast.active
+                ? "Re-seed cast"
+                : "Seed cast"}
           </button>
           {cast.active ? (
             <button type="button" className="btn ghost" onClick={cast.clearCast}>
@@ -287,8 +292,18 @@ export function DemoPage() {
                       disabled={!!cast.busy}
                       onClick={() => void cast.seedCast()}
                     >
-                      {cast.busy === "seed" ? "Seeding…" : "Run seed"}
+                      {cast.busy === "seed" ? "Seeding… (2–5 min)" : "Run seed"}
                     </button>
+                    {cast.busy === "seed" && cast.cast?.steps?.length ? (
+                      <p className="tiny muted" style={{ marginTop: "0.5rem" }}>
+                        {cast.cast.steps
+                          .filter((s) =>
+                            ["setupIdentities", "setupAsset", "fundAndStake"].includes(s.step),
+                          )
+                          .map((s) => `${s.step}: ${s.status}`)
+                          .join(" · ")}
+                      </p>
+                    ) : null}
                   </div>
                 ) : null}
                 {stage.id === "freeze" ? (

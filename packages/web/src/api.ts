@@ -250,6 +250,9 @@ export type CastActResult = {
   txs: CastTx[];
   ids?: Record<string, string>;
   run: DemoRun;
+  /** Seed accepted and running in background — poll /cast. */
+  accepted?: boolean;
+  seeding?: boolean;
 };
 
 export function getCast(runId: string) {
