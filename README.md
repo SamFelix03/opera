@@ -19,6 +19,7 @@ Built on Monad · Powered by the Cleanverse Compliance Stack
 | **Pitch deck** | [opera-pitch.pages.dev](https://opera-pitch.pages.dev/) |
 | **Demo video** | [YouTube](https://www.youtube.com/watch?v=mgChF-R9C2Q) |
 | **How to demo** | [docs/HOW_TO_DEMO.md](https://github.com/SamFelix03/opera/blob/master/docs/HOW_TO_DEMO.md) — click-by-click Cast path + behind-the-scenes (Cleanverse + Monad) |
+| **Verification** | [GATE_LOG.md](https://github.com/SamFelix03/opera/blob/master/docs/GATE_LOG.md) (C0–C14 PASS) · [e2e-test-report.md](https://github.com/SamFelix03/opera/blob/master/docs/e2e-test-report.md) (25/25) · [OperaSuite.t.sol](https://github.com/SamFelix03/opera/blob/master/packages/contracts/test/OperaSuite.t.sol) |
 | **Source repository** | [github.com/SamFelix03/opera](https://github.com/SamFelix03/opera) |
 | **Production scale plan** | [docs/PRODUCTION_SCALE.md](https://github.com/SamFelix03/opera/blob/master/docs/PRODUCTION_SCALE.md) — Postgres, real KYC→A-Pass, workers, indexer, custody, Fiat Ramp |
 | **Sample audit export** | [d76fd19d…json](https://github.com/SamFelix03/opera/blob/master/data/demo-exports/d76fd19d-3718-488e-b0a3-f2b0aa64b545.json) — live Monad + Cleanverse A-Token run (`settlement.mode: "opera-atoken"`), 48 events, EIP-191 signed |
@@ -89,6 +90,27 @@ pnpm --filter @opera/web dev         # :5173 → proxies /api
 ```
 
 Contracts are already deployed — see addresses above. Demo cast: open Cast HQ → **Seed cast** → follow Owner / Operator / Market / Playground desks.
+
+### Build & verification
+
+```bash
+pnpm typecheck
+pnpm test                                          # vitest (AES, SIWE, webhook HMAC, …)
+pnpm --filter @opera/contracts test                # forge test — OperaSuite.t.sol
+```
+
+```mermaid
+flowchart LR
+  Web[Web Cast / desks] --> API[Fastify API]
+  API --> DB[(SQLite index)]
+  API --> CV[Cleanverse cooperate API]
+  API --> Monad[Monad contracts]
+  Workers[Score + chain-sync] --> DB
+  Workers --> CV
+  Workers --> Monad
+```
+
+Evidence: [gate log](https://github.com/SamFelix03/opera/blob/master/docs/GATE_LOG.md) · [e2e report](https://github.com/SamFelix03/opera/blob/master/docs/e2e-test-report.md) · [signed audit sample](https://github.com/SamFelix03/opera/blob/master/data/demo-exports/d76fd19d-3718-488e-b0a3-f2b0aa64b545.json) · live Railway + MonadVision links above.
 
 ---
 
