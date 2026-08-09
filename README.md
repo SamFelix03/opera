@@ -12,55 +12,51 @@ Built on Monad · Powered by the Cleanverse Compliance Stack
 
 ## Important links
 
-
-| Resource                            | Link                                                                                                                                                                                                                                                                              |
-| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Live app (Railway)**              | [https://opera-web-production.up.railway.app](https://opera-web-production.up.railway.app)                                                                                                                                                                                        |
-| **Live API**                        | [https://opera-backend-production.up.railway.app](https://opera-backend-production.up.railway.app) (`GET /health` → `{"ok":true}`)                                                                                                                                                |
-| **Pitch deck**                      | TBD                                                                                                                                                                                                                                                                               |
-| **Demo video**                      | [https://www.youtube.com/watch?v=mgChF-R9C2Q](https://www.youtube.com/watch?v=mgChF-R9C2Q)                                                                                                                                                                                        |
-| **Source repository**               | [https://github.com/SamFelix03/opera](https://github.com/SamFelix03/opera)                                                                                                                                                                                                        |
-| **Sample audit export (txs + run)** | `[data/demo-exports/d76fd19d-3718-488e-b0a3-f2b0aa64b545.json](https://github.com/SamFelix03/opera/blob/master/data/demo-exports/d76fd19d-3718-488e-b0a3-f2b0aa64b545.json)` — live Monad + Cleanverse A-Token run (`settlement.mode: "opera-atoken"`), 48 events, EIP-191 signed |
-| **Deployments config**              | `[config/deployments/monad-testnet.json](https://github.com/SamFelix03/opera/blob/master/config/deployments/monad-testnet.json)`                                                                                                                                                  |
-| **A-Token launch record**           | `[config/deployments/opera-atoken.json](https://github.com/SamFelix03/opera/blob/master/config/deployments/opera-atoken.json)`                                                                                                                                                    |
+| Resource | Link |
+| --- | --- |
+| **Live app (Railway)** | [opera-web-production.up.railway.app](https://opera-web-production.up.railway.app) |
+| **Live API** | [opera-backend-production.up.railway.app](https://opera-backend-production.up.railway.app) (`GET /health` → `{"ok":true}`) |
+| **Pitch deck** | TBD |
+| **Demo video** | [YouTube](https://www.youtube.com/watch?v=mgChF-R9C2Q) |
+| **Source repository** | [github.com/SamFelix03/opera](https://github.com/SamFelix03/opera) |
+| **Sample audit export** | [d76fd19d…json](https://github.com/SamFelix03/opera/blob/master/data/demo-exports/d76fd19d-3718-488e-b0a3-f2b0aa64b545.json) — live Monad + Cleanverse A-Token run (`settlement.mode: "opera-atoken"`), 48 events, EIP-191 signed |
+| **Deployments config** | [monad-testnet.json](https://github.com/SamFelix03/opera/blob/master/config/deployments/monad-testnet.json) |
+| **A-Token launch record** | [opera-atoken.json](https://github.com/SamFelix03/opera/blob/master/config/deployments/opera-atoken.json) |
 
 
 
 
 ### Deployed contracts (Monad Testnet · chainId `10143`)
 
-Explorer: [https://testnet.monadvision.com](https://testnet.monadvision.com) · RPC: `https://testnet-rpc.monad.xyz`
+Explorer: [testnet.monadvision.com](https://testnet.monadvision.com) · RPC: `https://testnet-rpc.monad.xyz`
 
-
-| Contract                                        | Address                                                                                                                            |
-| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Settlement (Cleanverse A-Token · `OPRACVA3275`) | `[0x6A7942B254f84822f7237c6C14aD78A00a22BC4E](https://testnet.monadvision.com/address/0x6A7942B254f84822f7237c6C14aD78A00a22BC4E)` |
-| OperaToken (legacy local ERC20)                 | `[0x39Ae00FA57B509De9f4Da14B290e80924541AfD2](https://testnet.monadvision.com/address/0x39Ae00FA57B509De9f4Da14B290e80924541AfD2)` |
-| AssetRegistry                                   | `[0x83B831848eE0A9a2574Cf62a13c23d8eDCa84E9F](https://testnet.monadvision.com/address/0x83B831848eE0A9a2574Cf62a13c23d8eDCa84E9F)` |
-| ScoreStore                                      | `[0x3DCE9d2269fCB6b2F98619FC417dD0668Ae636C4](https://testnet.monadvision.com/address/0x3DCE9d2269fCB6b2F98619FC417dD0668Ae636C4)` |
-| LORRegistry                                     | `[0xc5E78532225B18e174FeCe089A854ac628179476](https://testnet.monadvision.com/address/0xc5E78532225B18e174FeCe089A854ac628179476)` |
-| MandateRegistry                                 | `[0xe33c7296173953C8376D14C7AA2D64Bb946a4644](https://testnet.monadvision.com/address/0xe33c7296173953C8376D14C7AA2D64Bb946a4644)` |
-| RevenueManager                                  | `[0x583c17fDf9031ece81251eA2f8c819C84fE7f69d](https://testnet.monadvision.com/address/0x583c17fDf9031ece81251eA2f8c819C84fE7f69d)` |
-| RightsPriceOracle                               | `[0x03002008F0DD0Bcc06CF40A5973bCebc220B1B66](https://testnet.monadvision.com/address/0x03002008F0DD0Bcc06CF40A5973bCebc220B1B66)` |
-| Cleanverse AccessCore (platform)                | `[0x8F118338a1fa41E7Fa86Be19A4e8B99Ed58A6EcC](https://testnet.monadvision.com/address/0x8F118338a1fa41E7Fa86Be19A4e8B99Ed58A6EcC)` |
-| Cleanverse A-Pass NFT (platform)                | `[0xbA82D189540CaC9DC6FF46B6837CaC1BFdEC58B9](https://testnet.monadvision.com/address/0xbA82D189540CaC9DC6FF46B6837CaC1BFdEC58B9)` |
-| Deployer / treasury                             | `0x2514844F312c02Ae3C9d4fEb40db4eC8830b6844`                                                                                       |
-| Score writer                                    | `0x99Cf8b5a338B86f1360eaf6a1c913634E36201E8`                                                                                       |
-| Cleanverse Validator pool (ScoreStore)          |                                                                                                                    `0x3DCE9d2269fCB6b2F98619FC417dD0668Ae636C4`                |
-
+| Contract | Address |
+| --- | --- |
+| Settlement (Cleanverse A-Token · `OPRACVA3275`) | [0x6A7942B254f84822f7237c6C14aD78A00a22BC4E](https://testnet.monadvision.com/address/0x6A7942B254f84822f7237c6C14aD78A00a22BC4E) |
+| OperaToken (legacy local ERC20) | [0x39Ae00FA57B509De9f4Da14B290e80924541AfD2](https://testnet.monadvision.com/address/0x39Ae00FA57B509De9f4Da14B290e80924541AfD2) |
+| AssetRegistry | [0x83B831848eE0A9a2574Cf62a13c23d8eDCa84E9F](https://testnet.monadvision.com/address/0x83B831848eE0A9a2574Cf62a13c23d8eDCa84E9F) |
+| ScoreStore | [0x3DCE9d2269fCB6b2F98619FC417dD0668Ae636C4](https://testnet.monadvision.com/address/0x3DCE9d2269fCB6b2F98619FC417dD0668Ae636C4) |
+| LORRegistry | [0xc5E78532225B18e174FeCe089A854ac628179476](https://testnet.monadvision.com/address/0xc5E78532225B18e174FeCe089A854ac628179476) |
+| MandateRegistry | [0xe33c7296173953C8376D14C7AA2D64Bb946a4644](https://testnet.monadvision.com/address/0xe33c7296173953C8376D14C7AA2D64Bb946a4644) |
+| RevenueManager | [0x583c17fDf9031ece81251eA2f8c819C84fE7f69d](https://testnet.monadvision.com/address/0x583c17fDf9031ece81251eA2f8c819C84fE7f69d) |
+| RightsPriceOracle | [0x03002008F0DD0Bcc06CF40A5973bCebc220B1B66](https://testnet.monadvision.com/address/0x03002008F0DD0Bcc06CF40A5973bCebc220B1B66) |
+| Cleanverse AccessCore (platform) | [0x8F118338a1fa41E7Fa86Be19A4e8B99Ed58A6EcC](https://testnet.monadvision.com/address/0x8F118338a1fa41E7Fa86Be19A4e8B99Ed58A6EcC) |
+| Cleanverse A-Pass NFT (platform) | [0xbA82D189540CaC9DC6FF46B6837CaC1BFdEC58B9](https://testnet.monadvision.com/address/0xbA82D189540CaC9DC6FF46B6837CaC1BFdEC58B9) |
+| Deployer / treasury | [0x2514844F312c02Ae3C9d4fEb40db4eC8830b6844](https://testnet.monadvision.com/address/0x2514844F312c02Ae3C9d4fEb40db4eC8830b6844) |
+| Score writer | [0x99Cf8b5a338B86f1360eaf6a1c913634E36201E8](https://testnet.monadvision.com/address/0x99Cf8b5a338B86f1360eaf6a1c913634E36201E8) |
+| Cleanverse Validator pool (ScoreStore) | [0x3DCE9d2269fCB6b2F98619FC417dD0668Ae636C4](https://testnet.monadvision.com/address/0x3DCE9d2269fCB6b2F98619FC417dD0668Ae636C4) |
 
 Sample on-chain txs from the export above (Monad testnet):
 
-
-| Step                 | Tx                                                                                                                     |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| Energy score = 100   | `[0xcc7b2598…](https://testnet.monadvision.com/tx/0xcc7b25988a8f0aa38ce64b29d1b74183945bf5e20182cd72507c2bf129f48b0f)` |
-| Maint score = 88     | `[0xd2708c36…](https://testnet.monadvision.com/tx/0xd2708c362931eb41ddd1a5a380a1c75a57fe82119647df587516a79bdf8d8d73)` |
-| Revenue distribute   | `[0xa91744f8…](https://testnet.monadvision.com/tx/0xa91744f8b62461f7669e308d850b2efe948ae2b87c4ed38451c392b755fc1f38)` |
-| Oracle `recordPrice` | `[0x83b9d6e4…](https://testnet.monadvision.com/tx/0x83b9d6e4f1db1d260dc6fa94875fbc3bae0f7327b08ba79fb8f688fa01fd9f5d)` |
-| Frozen score = 31    | `[0xe10777c5…](https://testnet.monadvision.com/tx/0xe10777c59421376c1158b576f3fc757d464ad01421f0c9daa492ad94a4537d19)` |
-| Maint LOR auto-list  | `[0x357ef385…](https://testnet.monadvision.com/tx/0x357ef385ad91ec4d91b8570075228a73ca18e2307a12a1d5725f14be7a46c6d5)` |
-| Replacement acquire  | `[0x69a95a21…](https://testnet.monadvision.com/tx/0x69a95a2147c8ddabc0dd3bfb577db06a1da58f4795fea9fa6a03955aacdda1d2)` |
+| Step | Tx |
+| --- | --- |
+| Energy score = 100 | [0xcc7b25988a8f0aa3…](https://testnet.monadvision.com/tx/0xcc7b25988a8f0aa38ce64b29d1b74183945bf5e20182cd72507c2bf129f48b0f) |
+| Maint score = 88 | [0xd2708c362931eb41…](https://testnet.monadvision.com/tx/0xd2708c362931eb41ddd1a5a380a1c75a57fe82119647df587516a79bdf8d8d73) |
+| Revenue distribute | [0xa91744f8b62461f7…](https://testnet.monadvision.com/tx/0xa91744f8b62461f7669e308d850b2efe948ae2b87c4ed38451c392b755fc1f38) |
+| Oracle `recordPrice` | [0x83b9d6e4f1db1d26…](https://testnet.monadvision.com/tx/0x83b9d6e4f1db1d260dc6fa94875fbc3bae0f7327b08ba79fb8f688fa01fd9f5d) |
+| Frozen score = 31 | [0xe10777c59421376c…](https://testnet.monadvision.com/tx/0xe10777c59421376c1158b576f3fc757d464ad01421f0c9daa492ad94a4537d19) |
+| Maint LOR auto-list | [0x357ef385ad91ec4d…](https://testnet.monadvision.com/tx/0x357ef385ad91ec4d91b8570075228a73ca18e2307a12a1d5725f14be7a46c6d5) |
+| Replacement acquire | [0x69a95a2147c8ddab…](https://testnet.monadvision.com/tx/0x69a95a2147c8ddabc0dd3bfb577db06a1da58f4795fea9fa6a03955aacdda1d2) |
 
 
 ---
@@ -70,13 +66,13 @@ Sample on-chain txs from the export above (Monad testnet):
 ## Repository layout
 
 
-| Package                                                                                                    | Role                                                                                                            |
-| ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `[packages/cleanverse-client](https://github.com/SamFelix03/opera/tree/master/packages/cleanverse-client)` | AES-256-CBC Cleanverse cooperate API client, HMAC webhooks                                                      |
-| `[packages/contracts](https://github.com/SamFelix03/opera/tree/master/packages/contracts)`                 | Foundry: ScoreStore, LORRegistry, MandateRegistry, RevenueManager, RightsPriceOracle, AssetRegistry, OperaToken |
-| `[packages/backend](https://github.com/SamFelix03/opera/tree/master/packages/backend)`                     | Fastify API, SIWE, score worker, cast demo, SQLite index, A-Token webhook                                       |
-| `[packages/agents](https://github.com/SamFelix03/opera/tree/master/packages/agents)`                       | Local `OperaAgent` processes (on-chain bid / revenue / inspection)                                              |
-| `[packages/web](https://github.com/SamFelix03/opera/tree/master/packages/web)`                             | Owner / Operator / Market / Playground / Audit / Demo cast UI                                                   |
+| Package | Role |
+| --- | --- |
+| [packages/cleanverse-client](https://github.com/SamFelix03/opera/tree/master/packages/cleanverse-client) | AES-256-CBC Cleanverse cooperate API client, HMAC webhooks |
+| [packages/contracts](https://github.com/SamFelix03/opera/tree/master/packages/contracts) | Foundry: ScoreStore, LORRegistry, MandateRegistry, RevenueManager, RightsPriceOracle, AssetRegistry, OperaToken |
+| [packages/backend](https://github.com/SamFelix03/opera/tree/master/packages/backend) | Fastify API, SIWE, score worker, cast demo, SQLite index, A-Token webhook |
+| [packages/agents](https://github.com/SamFelix03/opera/tree/master/packages/agents) | Local `OperaAgent` processes (on-chain bid / revenue / inspection) |
+| [packages/web](https://github.com/SamFelix03/opera/tree/master/packages/web) | Owner / Operator / Market / Playground / Audit / Demo cast UI |
 
 
 
@@ -165,7 +161,7 @@ An LOR grants authority for a scoped operation on a registered asset (e.g. energ
 
 #### The Compliance Score
 
-Scores are written to `ScoreStore` by an authorised writer. Weights live in `[score.ts](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/score.ts)`:
+Scores are written to `ScoreStore` by an authorised writer. Weights live in [score.ts](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/score.ts):
 
 
 | Signal                   | Source in this build                                                                                         | Weight |
@@ -213,7 +209,7 @@ Frozen A-Pass (`status=2`) multiplies raw score by **0.35** (demo 88 → 31). Wo
 
 ## 5. Cleanverse Stack Integration
 
-Opera wires Cleanverse cooperate APIs for identity, settlement, CCP eligibility, Travel Rule artefacts, and institutional lookups. Primary helpers: `[cleanverse-helpers.ts](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/lib/cleanverse-helpers.ts)` · client: `[cleanverse-client](https://github.com/SamFelix03/opera/blob/master/packages/cleanverse-client/src/index.ts)`.
+Opera wires Cleanverse cooperate APIs for identity, settlement, CCP eligibility, Travel Rule artefacts, and institutional lookups. Primary helpers: [cleanverse-helpers.ts](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/lib/cleanverse-helpers.ts) · client: [cleanverse-client](https://github.com/SamFelix03/opera/blob/master/packages/cleanverse-client/src/index.ts).
 
 ### 5.0 Integration map
 
@@ -279,7 +275,7 @@ AES-256-CBC for encrypted cooperate writes; HMAC webhook on raw body for A-Token
 | WalletBar              | oCVA balance on settlement token                                                                                                                                                                        |
 | Market acquire         | Notes frozen-seller A-Pass settlement constraint                                                                                                                                                        |
 | `GET /v1/me`           | Returns A-Pass profile + validator eligibility (UI shows A-Pass status today)                                                                                                                           |
-| Product APIs           | `/v1/apass/list`, deposit address, institution whitelist, travel-rule, atoken rules — available to SIWE clients via `[api.ts](https://github.com/SamFelix03/opera/blob/master/packages/web/src/api.ts)` |
+| Product APIs           | `/v1/apass/list`, deposit address, institution whitelist, travel-rule, atoken rules — available to SIWE clients via [api.ts](https://github.com/SamFelix03/opera/blob/master/packages/web/src/api.ts) |
 
 
 
@@ -343,8 +339,8 @@ Multi-dimensional score weights by asset class, portable score history, external
 
 | Role                      | Product surface                                                                                                                                                                                                                                                      |
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Asset Owner               | Owner desk: mint LORs, publish mandates, award winners, view revenue / events (`[Owner.tsx](https://github.com/SamFelix03/opera/blob/master/packages/web/src/pages/Owner.tsx)`). Cast role `owner`.                                                                  |
-| Operator / Agent Deployer | Operator desk: ensure A-Pass, bid + stake oCVA, portfolio, distribute, auto-list (`[Operator.tsx](https://github.com/SamFelix03/opera/blob/master/packages/web/src/pages/Operator.tsx)`). Optional local `OperaAgent`. Cast: `energyOp` / `maintOp` / `replacement`. |
+| Asset Owner               | Owner desk: mint LORs, publish mandates, award winners, view revenue / events ([Owner.tsx](https://github.com/SamFelix03/opera/blob/master/packages/web/src/pages/Owner.tsx)). Cast role `owner`.                                                                  |
+| Operator / Agent Deployer | Operator desk: ensure A-Pass, bid + stake oCVA, portfolio, distribute, auto-list ([Operator.tsx](https://github.com/SamFelix03/opera/blob/master/packages/web/src/pages/Operator.tsx)). Optional local `OperaAgent`. Cast: `energyOp` / `maintOp` / `replacement`. |
 | Institutional Investor    | Cast role `investor` + Market / oracle views                                                                                                                                                                                                                         |
 | Regulator / Auditor       | Audit desk exports signed JSON/PDF event packs; cast role `regulator`                                                                                                                                                                                                |
 | Compliance Officer        | Playground Rules (freeze / push score / activate) + score badges                                                                                                                                                                                                     |
@@ -378,7 +374,7 @@ Multi-dimensional score weights by asset class, portable score history, external
 
 ### 7.3 Continuous compliance and score-driven events
 
-- Score worker (when `WORKERS_ENABLED=1`): A-Pass + validator/`query_txs` → `computeScore` → `ScoreStore.setScore` → maybe auto-list (`[score-worker.ts](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/score-worker.ts)`)
+- Score worker (when `WORKERS_ENABLED=1`): A-Pass + validator/`query_txs` → `computeScore` → `ScoreStore.setScore` → maybe auto-list ([score-worker.ts](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/score-worker.ts))
 - Demo / cast: freeze A-Pass → push score 31 → `setAutoListed` / `maybeAutoList`
 - Notifications in SQLite for owner alerts
 
@@ -386,7 +382,7 @@ Multi-dimensional score weights by asset class, portable score history, external
 
 ### 7.4 Revenue distribution
 
-- `RevenueManager.distribute(operator, gross)` pulls oCVA; 50% owner; operator half by `yieldSplit(score)` — `[RevenueManager.sol](https://github.com/SamFelix03/opera/blob/master/packages/contracts/src/RevenueManager.sol#L38-L75)`
+- `RevenueManager.distribute(operator, gross)` pulls oCVA; 50% owner; operator half by `yieldSplit(score)` — [RevenueManager.sol](https://github.com/SamFelix03/opera/blob/master/packages/contracts/src/RevenueManager.sol#L38-L75)
 - Travel Rule download after demo distribute / acquire txs
 
 
@@ -394,7 +390,7 @@ Multi-dimensional score weights by asset class, portable score history, external
 ### 7.5 Regulator audit export
 
 - Pack includes asset ids, settlement token, freeze formula, demo `events[]`, EIP-191 `contentHash` + deployer signature
-- Download from Audit desk / API; samples under `[data/demo-exports/](https://github.com/SamFelix03/opera/tree/master/data/demo-exports)`
+- Download from Audit desk / API; samples under [data/demo-exports/](https://github.com/SamFelix03/opera/tree/master/data/demo-exports)
 
 ---
 
@@ -424,7 +420,7 @@ Multi-dimensional score weights by asset class, portable score history, external
 5. **Replacement** — replacement operator acquires LOR (`acquireLOR`); seller A-Pass temporarily activated for settlement
 6. **Audit** — signed JSON/PDF Opera event pack ([sample](https://github.com/SamFelix03/opera/blob/master/data/demo-exports/d76fd19d-3718-488e-b0a3-f2b0aa64b545.json))
 
-**Cast HQ:** Seed → Hire → Operate → Freeze + push score (Playground) → Auto-list → Market acquire as Replacement → Audit export. Steps: `DEMO_STEPS` in `[state.ts](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/demo/state.ts#L18-L27)`.
+**Cast HQ:** Seed → Hire → Operate → Freeze + push score (Playground) → Auto-list → Market acquire as Replacement → Audit export. Steps: `DEMO_STEPS` in [state.ts](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/demo/state.ts#L18-L27).
 
 API path: `POST /demo/bootstrap` then `POST /demo/:runId/step/:stepName` for `setupIdentities` → `setupAsset` → `fundAndStake` → `normalOps` → `sanctionsEvent` → `replacementAcquire` → `regulatorExport`.
 
@@ -451,7 +447,7 @@ API path: `POST /demo/bootstrap` then `POST /demo/:runId/step/:stepName` for `se
 | Cleanverse A-Token | External settlement ERC-20 with A-Pass transfer policy                    |
 
 
-Transfer fee: `[LORRegistry.sol](https://github.com/SamFelix03/opera/blob/master/packages/contracts/src/LORRegistry.sol#L67-L74)` · Auto-list threshold default 72: [L25](https://github.com/SamFelix03/opera/blob/master/packages/contracts/src/LORRegistry.sol#L25).
+Transfer fee: [LORRegistry.sol](https://github.com/SamFelix03/opera/blob/master/packages/contracts/src/LORRegistry.sol#L67-L74) · Auto-list threshold default 72: [L25](https://github.com/SamFelix03/opera/blob/master/packages/contracts/src/LORRegistry.sol#L25).
 
 ### 9.2 Cleanverse APIs in use
 
@@ -475,7 +471,7 @@ Transfer fee: `[LORRegistry.sol](https://github.com/SamFelix03/opera/blob/master
 | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Score computation worker            | ~15s loop when `WORKERS_ENABLED=1`                                                                                                                                                                             |
 | Auto-listing cascade                | Worker + cast / product push                                                                                                                                                                                   |
-| SQLite mandate/LOR/bid index + sync | `[chain-index.ts](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/chain-index.ts)`, `[chain-sync.ts](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/chain-sync.ts)` |
+| SQLite mandate/LOR/bid index + sync | [chain-index.ts](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/chain-index.ts), [chain-sync.ts](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/chain-sync.ts) |
 | Mandate award                       | Manual owner award                                                                                                                                                                                             |
 | Notifications                       | SQLite + UI feed                                                                                                                                                                                               |
 | SIWE sessions                       | Product `/v1/*`                                                                                                                                                                                                |
