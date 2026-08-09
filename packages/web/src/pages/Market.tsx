@@ -186,33 +186,49 @@ export function MarketPage() {
                 </p>
               </div>
             ) : (
-              <div className="card-list">
-                {listed.map((lor) => (
-                  <button
-                    type="button"
-                    key={lor.lorId}
-                    className={`lor-card selectable${selectedLor?.lorId === lor.lorId && dialogOpen ? " selected" : ""}`}
-                    onClick={() => openAcquire(lor)}
-                  >
-                    <div className="lor-card-header">
+              <div className="mandate-list">
+                {listed.map((lor) => {
+                  const isSelected =
+                    selectedLor?.lorId === lor.lorId && dialogOpen;
+                  return (
+                    <button
+                      type="button"
+                      key={lor.lorId}
+                      className={`mandate-row${isSelected ? " selected" : ""}`}
+                      onClick={() => openAcquire(lor)}
+                    >
                       <div>
-                        <strong>LOR #{lor.lorId}</strong>
-                        <span className="muted" style={{ marginLeft: "0.5rem", fontSize: "0.78rem" }}>
-                          Asset {lor.assetId}
-                        </span>
+                        <div className="mandate-row-top">
+                          <span className="mandate-row-id">LOR #{lor.lorId}</span>
+                          <span className="yield-band full">Listed</span>
+                        </div>
+                        <div className="mandate-row-stats">
+                          <div className="mandate-stat">
+                            <span className="mandate-stat-label">Price</span>
+                            <span className="mandate-stat-value">
+                              {formatUnits6(lor.price)} oCVA
+                            </span>
+                          </div>
+                          <div className="mandate-stat">
+                            <span className="mandate-stat-label">Scope</span>
+                            <span className="mandate-stat-value">{lor.scope}</span>
+                          </div>
+                          <div className="mandate-stat">
+                            <span className="mandate-stat-label">Min score</span>
+                            <span className="mandate-stat-value">{lor.minScoreToHold}</span>
+                          </div>
+                          <div className="mandate-stat">
+                            <span className="mandate-stat-label">Holder</span>
+                            <span className="mandate-stat-value mono">
+                              {shortAddr(lor.holder)}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                      <span style={{ fontWeight: 600 }}>{formatUnits6(lor.price)} oCVA</span>
-                    </div>
-                    <div className="lor-card-meta">
-                      <span>{lor.scope}</span>
-                      <span>Min score {lor.minScoreToHold}</span>
-                      <span className="mono">{shortAddr(lor.holder)}</span>
-                    </div>
-                    <p className="muted" style={{ fontSize: "0.75rem", margin: "0.35rem 0 0" }}>
-                      Select to acquire →
-                    </p>
-                  </button>
-                ))}
+                      <span className="mandate-row-cta">Acquire</span>
+                    </button>
+                  );
+                })}
               </div>
             )}
           </section>

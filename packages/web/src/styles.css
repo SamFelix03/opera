@@ -493,6 +493,7 @@ button.mandate-row:disabled:hover,
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  max-width: 100%;
 }
 
 .mandate-stat-value.mono {
