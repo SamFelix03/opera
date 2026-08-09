@@ -18,7 +18,9 @@ Built on Monad · Powered by the Cleanverse Compliance Stack
 | **Live API** | [opera-backend-production.up.railway.app](https://opera-backend-production.up.railway.app) (`GET /health` → `{"ok":true}`) |
 | **Pitch deck** | [opera-pitch.pages.dev](https://opera-pitch.pages.dev/) |
 | **Demo video** | [YouTube](https://www.youtube.com/watch?v=mgChF-R9C2Q) |
+| **How to demo** | [docs/HOW_TO_DEMO.md](https://github.com/SamFelix03/opera/blob/master/docs/HOW_TO_DEMO.md) — click-by-click Cast path + behind-the-scenes (Cleanverse + Monad) |
 | **Source repository** | [github.com/SamFelix03/opera](https://github.com/SamFelix03/opera) |
+| **Production scale plan** | [docs/PRODUCTION_SCALE.md](https://github.com/SamFelix03/opera/blob/master/docs/PRODUCTION_SCALE.md) — Postgres, real KYC→A-Pass, workers, indexer, custody, Fiat Ramp |
 | **Sample audit export** | [d76fd19d…json](https://github.com/SamFelix03/opera/blob/master/data/demo-exports/d76fd19d-3718-488e-b0a3-f2b0aa64b545.json) — live Monad + Cleanverse A-Token run (`settlement.mode: "opera-atoken"`), 48 events, EIP-191 signed |
 | **Deployments config** | [monad-testnet.json](https://github.com/SamFelix03/opera/blob/master/config/deployments/monad-testnet.json) |
 | **A-Token launch record** | [opera-atoken.json](https://github.com/SamFelix03/opera/blob/master/config/deployments/opera-atoken.json) |
@@ -295,35 +297,19 @@ Orchestrator / cast: [orchestrator.ts](https://github.com/SamFelix03/opera/blob/
 
 ## Scalability plan
 
-Architecture today: Fastify + SQLite + ~15s workers + Monad public RPC.
+Hackathon stack today: Fastify + SQLite + in-process workers + Monad public RPC. The full production plan — Postgres, Redis, real KYC → A-Pass, queue-based score/indexer workers, KMS custody, multi-tenant RBAC, Travel Rule retries, Fiat Ramp readiness, SLOs, and phased delivery — lives in:
 
-### Near-term
+**[docs/PRODUCTION_SCALE.md](https://github.com/SamFelix03/opera/blob/master/docs/PRODUCTION_SCALE.md)**
 
+Summary of direction:
 
-| Area                | Current                            | Scale move                                                    |
-| ------------------- | ---------------------------------- | ------------------------------------------------------------- |
-| Mandate / LOR lists | SQLite index + ~12s `getLogs` sync | Shard by `assetId`; Postgres when SQLite is the bottleneck    |
-| Score updates       | `SCORE_INTERVAL_MS` ~15s           | Batch `setScore`; A-Pass status webhooks instead of poll-only |
-| RPC                 | Monad public endpoint              | Dedicated RPC; queued writes                                  |
-| Cast demo keys      | Per-run EOAs in SQLite             | KMS / ephemeral vault                                         |
-| Frontend API        | Prod web → public Railway backend  | Keep public API; avoid broken private mesh hops               |
-
-
-
-
-### Mid-term
-
-1. Event-driven auto-list (score writer → indexer → `setAutoListed`)
-2. Treasury / escrow receive path for distress acquires
-3. Automated mandate award when score and stake constraints are met
-4. Record LOR TWAP on every successful `acquireLOR` / `transferLOR`
-5. Multi-dimensional score weights and richer CCP outcome feeds as Cleanverse expands them
-
-
-
-### Longer-term
-
-Multi-dimensional score weights by asset class, portable score history, external DeFi consumption of the Rights Price Oracle, and fiat on/off-ramp via Cleanverse Gateway once the product is live with real funds.
+| Area | Demo today | Production |
+| --- | --- | --- |
+| Data | SQLite file | Postgres + Redis + object storage |
+| Identity | Stub `generate_apass` | KYC vendor (Sumsub/Persona) → Cleanverse A-Pass |
+| Scores / sync | In-process loops | Queue workers + event-driven auto-list + reorg-safe indexer |
+| Keys | EOAs / cast keys in DB | KMS / institutional custody; no hot demo keys |
+| Settlement | oCVA on Monad testnet | Same rails + optional Cleanverse Fiat Ramp when live |
 
 ---
 
@@ -414,6 +400,8 @@ Multi-dimensional score weights by asset class, portable score history, external
 4. **Sanctions** — `update_status(2)` on maint operator → score ×0.35 → **31** → auto-list (threshold 72)
 5. **Replacement** — replacement operator acquires LOR (`acquireLOR`); seller A-Pass temporarily activated for settlement
 6. **Audit** — signed JSON/PDF Opera event pack ([sample](https://github.com/SamFelix03/opera/blob/master/data/demo-exports/d76fd19d-3718-488e-b0a3-f2b0aa64b545.json))
+
+**Full click-by-click guide (UI + behind the scenes):** [docs/HOW_TO_DEMO.md](https://github.com/SamFelix03/opera/blob/master/docs/HOW_TO_DEMO.md) · **Video:** [YouTube](https://www.youtube.com/watch?v=mgChF-R9C2Q)
 
 **Cast HQ:** Seed → Hire → Operate → Freeze + push score (Playground) → Auto-list → Market acquire as Replacement → Audit export. Steps: `DEMO_STEPS` in [state.ts](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/demo/state.ts#L18-L27).
 
@@ -512,7 +500,7 @@ Transfer fee: [LORRegistry.sol](https://github.com/SamFelix03/opera/blob/master/
 
 ## 11. Roadmap
 
-
+Operational hardening and scale-out detail: **[Production Scalability & Hardening Plan](https://github.com/SamFelix03/opera/blob/master/docs/PRODUCTION_SCALE.md)** (KYC→A-Pass, Postgres, workers, indexer, custody, multi-tenant RBAC, Fiat Ramp).
 
 ### Score & compliance
 
@@ -520,23 +508,22 @@ Transfer fee: [LORRegistry.sol](https://github.com/SamFelix03/opera/blob/master/
 - Peer benchmarking against operator cohort
 - Portable score-history credentials
 - Richer CCP / AML outcome feeds when available from Cleanverse
-
-
+- Production KYC vendor integration feeding `generate_apass` (see scale plan §4)
 
 ### Market
 
 - Structured LOR products (tranches by blended score)
 - External DeFi consumption of Rights Price Oracle
 - Cross-chain LOR portability
-
-
+- Event-driven auto-list and reorg-safe chain indexer (scale plan §§5–6)
 
 ### Institutional
 
 - DAO governance for LOR policy on community assets
 - Insurance pricing from LOR score feeds
 - Sovereign / fund-of-fund mandate structures
-- Fiat settlement via Cleanverse Gateway / Fiat Ramp for live products with real funds
+- Multi-tenant orgs + RBAC (scale plan §10)
+- Fiat settlement via Cleanverse Gateway / Fiat Ramp for live products with real funds (scale plan §9)
 
 ---
 
