@@ -14,6 +14,7 @@ Built on Monad · Powered by the Cleanverse Compliance Stack
 
 | Resource | Link |
 | --- | --- |
+| **One pager (start here)** | [Google Doc](https://docs.google.com/document/d/19zYYCJJuM1MCjDgkXW6WrM95VYdKsBUHsJW7HyFfKK0/edit?usp=sharing) — problem · solution · CVI·CVA · chain · roles/flows · judging criteria |
 | **Live app (Railway)** | [opera-web-production.up.railway.app](https://opera-web-production.up.railway.app) |
 | **Live API** | [opera-backend-production.up.railway.app](https://opera-backend-production.up.railway.app) (`GET /health` → `{"ok":true}`) |
 | **Pitch deck** | [opera-pitch.pages.dev](https://opera-pitch.pages.dev/) |
@@ -30,8 +31,6 @@ Built on Monad · Powered by the Cleanverse Compliance Stack
 
 
 ### Deployed contracts (Monad Testnet · chainId `10143`)
-
-Explorer: [testnet.monadvision.com](https://testnet.monadvision.com) · RPC: `https://testnet-rpc.monad.xyz`
 
 | Contract | Address |
 | --- | --- |
