@@ -141,10 +141,17 @@ function OwnerBody({ tab }: { tab: OwnerTab }) {
   const publish = usePublishMandate();
   const award = useAwardMandate();
 
-  const reloadMandates = () =>
-    apiGet<{ mandates: MandateRow[] }>("/mandates")
+  const reloadMandates = () => {
+    const pub = castActive
+      ? (cast.roles.find((r) => r.role === "owner")?.address ?? viewer)
+      : viewer;
+    const q = pub
+      ? `/mandates?publisher=${encodeURIComponent(pub)}&limit=100`
+      : "/mandates?limit=100";
+    return apiGet<{ mandates: MandateRow[] }>(q)
       .then((res) => setMandates(res.mandates ?? []))
       .catch(() => setMandates([]));
+  };
 
   const { data: nextLorId } = useReadContract({
     address: addresses.LORRegistry,
@@ -179,7 +186,7 @@ function OwnerBody({ tab }: { tab: OwnerTab }) {
 
   useEffect(() => {
     void reloadMandates();
-  }, [publish.isConfirmed, award.isConfirmed, cast.lastResult]);
+  }, [publish.isConfirmed, award.isConfirmed, cast.lastResult, viewer, castActive, tab]);
 
   useEffect(() => {
     if (holderParam) setMintHolder(holderParam);
@@ -298,9 +305,8 @@ function OwnerBody({ tab }: { tab: OwnerTab }) {
   const viewerForMandates = castActive
     ? (cast.roles.find((r) => r.role === "owner")?.address ?? viewer)
     : viewer;
-  const mine = (mandates ?? []).filter(
-    (m) => m.publisher?.toLowerCase() === viewerForMandates?.toLowerCase(),
-  );
+  // When filtered by publisher on the API, the list is already "mine".
+  const mine = mandates ?? [];
   const openMine = mine.filter((m) => m.open && !m.awarded);
 
   if (tab === "overview") {

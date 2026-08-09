@@ -217,10 +217,11 @@ function OperatorBody({ tab }: { tab: OpTab }) {
   }, [viewer, castActive, siwe.authenticated, cast.lastResult]);
 
   useEffect(() => {
-    void apiGet<{ mandates: MandateRow[] }>("/mandates?open=1")
+    if (tab !== "bid" && tab !== "overview") return;
+    void apiGet<{ mandates: MandateRow[] }>("/mandates?open=1&limit=100")
       .then((res) => setOpenMandates(res.mandates ?? []))
       .catch(() => setOpenMandates([]));
-  }, [bid.isConfirmed, cast.lastResult]);
+  }, [tab, bid.isConfirmed, cast.lastResult]);
 
   useEffect(() => {
     if (!viewer) {

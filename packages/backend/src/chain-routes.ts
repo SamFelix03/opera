@@ -28,9 +28,10 @@ export async function registerChainRoutes(
   db: Database.Database,
 ) {
   app.get("/lors", async (req: FastifyRequest) => {
-    const q = req.query as { listed?: string; limit?: string };
+    const q = req.query as { listed?: string; limit?: string; holder?: string };
     const listedOnly = q.listed === "1" || q.listed === "true";
     const limit = Math.min(Number(q.limit ?? 50), 200);
+    const holderFilter = q.holder?.toLowerCase() ?? null;
     const ctx = createChainCtx();
     const next = await ctx.publicClient.readContract({
       address: ctx.deployment.contracts.LORRegistry,
@@ -43,8 +44,9 @@ export async function registerChainRoutes(
       functionName: "autoListThreshold",
     });
 
+    // Newest first — old ascending scan hid fresh mint/list IDs behind the limit.
     const items: Record<string, unknown>[] = [];
-    for (let id = 1n; id < next && items.length < limit; id++) {
+    for (let id = next - 1n; id >= 1n && items.length < limit; id--) {
       const row = await ctx.publicClient.readContract({
         address: ctx.deployment.contracts.LORRegistry,
         abi: lorAbi,
@@ -54,6 +56,7 @@ export async function registerChainRoutes(
       const [assetId, holder, scope, price, autoListed, active] = row;
       if (!active) continue;
       if (listedOnly && !autoListed) continue;
+      if (holderFilter && String(holder).toLowerCase() !== holderFilter) continue;
       const minScore = await ctx.publicClient.readContract({
         address: ctx.deployment.contracts.LORRegistry,
         abi: lorAbi,
@@ -77,14 +80,16 @@ export async function registerChainRoutes(
       autoListThreshold: Number(threshold),
       settlementToken: ctx.deployment.settlementToken,
       count: items.length,
+      nextId: next.toString(),
       lors: items,
     };
   });
 
   app.get("/mandates", async (req: FastifyRequest) => {
-    const q = req.query as { open?: string; limit?: string };
+    const q = req.query as { open?: string; limit?: string; publisher?: string };
     const openOnly = q.open === "1" || q.open === "true";
     const limit = Math.min(Number(q.limit ?? 50), 200);
+    const publisherFilter = q.publisher?.toLowerCase() ?? null;
     const ctx = createChainCtx();
     const next = await ctx.publicClient.readContract({
       address: ctx.deployment.contracts.MandateRegistry,
@@ -92,8 +97,9 @@ export async function registerChainRoutes(
       functionName: "nextMandateId",
     });
 
+    // Newest first so freshly published cast/demo mandates appear in desk lists.
     const items: Record<string, unknown>[] = [];
-    for (let id = 1n; id < next && items.length < limit; id++) {
+    for (let id = next - 1n; id >= 1n && items.length < limit; id--) {
       const m = await ctx.publicClient.readContract({
         address: ctx.deployment.contracts.MandateRegistry,
         abi: manAbi,
@@ -113,6 +119,7 @@ export async function registerChainRoutes(
         awarded,
       ] = m;
       if (openOnly && !(open && !awarded)) continue;
+      if (publisherFilter && String(publisher).toLowerCase() !== publisherFilter) continue;
       items.push({
         mandateId: id.toString(),
         assetId: assetId.toString(),
@@ -129,7 +136,7 @@ export async function registerChainRoutes(
       });
     }
 
-    return { count: items.length, mandates: items };
+    return { count: items.length, nextMandateId: next.toString(), mandates: items };
   });
 
   app.get("/mandates/:id/bids", async (req: FastifyRequest, reply: FastifyReply) => {
