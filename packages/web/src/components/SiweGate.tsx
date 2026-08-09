@@ -1,19 +1,6 @@
 import type { ReactNode } from "react";
 import { useSiweSession } from "../hooks/useSiweSession";
 
-function phaseCopy(phase: string): string {
-  switch (phase) {
-    case "nonce":
-      return "Requesting sign-in nonce…";
-    case "signing":
-      return "Confirm the sign-in request in your wallet (check MetaMask for a pending signature)…";
-    case "verifying":
-      return "Verifying signature…";
-    default:
-      return "Signing in…";
-  }
-}
-
 /** Soft banner while SIWE is in progress / failed. Children still render. */
 export function SiweStatus() {
   const siwe = useSiweSession();
@@ -23,12 +10,7 @@ export function SiweStatus() {
   return (
     <div className="alert" style={{ marginBottom: "1rem" }}>
       {siwe.loading ? (
-        <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", flexWrap: "wrap" }}>
-          <p style={{ margin: 0, flex: 1 }}>{phaseCopy(siwe.phase)}</p>
-          <button type="button" className="btn secondary" onClick={siwe.cancelSignIn}>
-            Cancel
-          </button>
-        </div>
+        <p style={{ margin: 0 }}>Confirm the sign-in request in your wallet…</p>
       ) : (
         <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", flexWrap: "wrap" }}>
           <p style={{ margin: 0, flex: 1 }}>
@@ -40,7 +22,7 @@ export function SiweStatus() {
             ) : null}
           </p>
           <button type="button" className="btn" onClick={() => void siwe.signIn()}>
-            Sign in
+            Retry sign-in
           </button>
         </div>
       )}

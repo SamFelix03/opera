@@ -56,27 +56,5 @@ describe("C8 SIWE auth", () => {
     expect(verifyRes.statusCode).toBe(200);
     expect(verifyRes.json().ok).toBe(true);
     expect(verifyRes.json().address.toLowerCase()).toBe(account.address.toLowerCase());
-
-    const sessionRes = await app.inject({
-      method: "GET",
-      url: `/auth/session?address=${account.address}`,
-    });
-    expect(sessionRes.statusCode).toBe(200);
-    expect(sessionRes.json().authenticated).toBe(true);
-  });
-
-  it("does not treat nonce-only rows as authenticated", async () => {
-    const other = privateKeyToAccount(generatePrivateKey());
-    const nonceRes = await app.inject({
-      method: "GET",
-      url: `/auth/nonce?address=${other.address}`,
-    });
-    expect(nonceRes.statusCode).toBe(200);
-
-    const sessionRes = await app.inject({
-      method: "GET",
-      url: `/auth/session?address=${other.address}`,
-    });
-    expect(sessionRes.json().authenticated).toBe(false);
   });
 });

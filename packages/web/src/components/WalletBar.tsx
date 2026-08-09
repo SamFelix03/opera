@@ -62,14 +62,7 @@ function WalletBalances() {
         <span className="balance-chip-hint">Cleanverse CVA</span>
       </div>
       {siwe.loading ? (
-        <button
-          type="button"
-          className="balance-chip-hint-alone linkish"
-          onClick={siwe.cancelSignIn}
-          title="Cancel stuck sign-in"
-        >
-          {siwe.phase === "signing" ? "Waiting for wallet… · Cancel" : "Signing… · Cancel"}
-        </button>
+        <span className="balance-chip-hint-alone">Signing…</span>
       ) : !siwe.authenticated ? (
         <button type="button" className="balance-chip-hint-alone linkish" onClick={() => void siwe.signIn()}>
           Sign in

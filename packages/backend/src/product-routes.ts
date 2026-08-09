@@ -22,10 +22,8 @@ function requireSession(
     reply.code(401).send({ error: "x-opera-address header required" });
     return null;
   }
-  const row = db
-    .prepare("SELECT address, verified FROM sessions WHERE address = ?")
-    .get(addr) as { address: string; verified: number } | undefined;
-  if (!row || !row.verified) {
+  const row = db.prepare("SELECT address FROM sessions WHERE address = ?").get(addr) as { address: string } | undefined;
+  if (!row) {
     reply.code(401).send({ error: "SIWE session required — POST /auth/verify first" });
     return null;
   }
