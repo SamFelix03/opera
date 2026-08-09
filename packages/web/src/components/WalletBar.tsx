@@ -2,9 +2,10 @@ import { useAccount, useBalance, useReadContract } from "wagmi";
 import { FAUCET_URL, REOWN_CLOUD_URL, WC_CLOUD_URL } from "../config/monad";
 import { walletConfigured, appKitReady } from "../config/appkit";
 import { addresses, erc20Abi } from "../lib/contracts";
-import { deployments } from "../api";
 import { formatMon, formatUnits6 } from "../lib/format";
 import { useSiweSession } from "../hooks/useSiweSession";
+import { ConnectWalletButton } from "./ConnectWalletButton";
+import { resetWalletConnection } from "./StuckWalletReconnectGuard";
 
 export function SetupBanner() {
   return (
@@ -64,7 +65,11 @@ function WalletBalances() {
       {siwe.loading ? (
         <span className="balance-chip-hint-alone">Waiting for signature…</span>
       ) : !siwe.authenticated ? (
-        <button type="button" className="balance-chip-hint-alone linkish" onClick={() => void siwe.signIn()}>
+        <button
+          type="button"
+          className="balance-chip-hint-alone linkish"
+          onClick={() => void siwe.signIn()}
+        >
           Sign in
         </button>
       ) : null}
@@ -76,16 +81,37 @@ function WalletBalances() {
 }
 
 function ConnectedWalletBar() {
-  const { isConnected } = useAccount();
+  const { isConnected, status } = useAccount();
+  const reconnecting = status === "reconnecting" || status === "connecting";
 
   return (
     <div className="wallet-bar">
-      {isConnected ? <WalletBalances /> : (
+      {isConnected ? (
+        <WalletBalances />
+      ) : (
         <a className="btn secondary btn-sm" href={FAUCET_URL} target="_blank" rel="noreferrer">
           Fund
         </a>
       )}
-      <appkit-button balance="hide" />
+      {/*
+        Prefer our button when disconnected — AppKit's <appkit-button> often
+        renders a broken loading shell while restoring a dead WC session.
+        When connected, AppKit button is the account / disconnect menu.
+      */}
+      {isConnected ? (
+        <appkit-button balance="hide" />
+      ) : reconnecting ? (
+        <button
+          type="button"
+          className="btn secondary btn-sm"
+          onClick={resetWalletConnection}
+          title="Wallet reconnect is stuck — clear cache and reload"
+        >
+          Reset wallet
+        </button>
+      ) : (
+        <ConnectWalletButton label="Connect Wallet" />
+      )}
     </div>
   );
 }
