@@ -126,9 +126,6 @@ function OwnerBody({ tab }: { tab: OwnerTab }) {
   const [mandatesError, setMandatesError] = useState<string | null>(null);
   const [mintScope, setMintScope] = useState("energy-revenue");
   const [mintHolder, setMintHolder] = useState(holderParam ?? "");
-  const [operatorCandidates, setOperatorCandidates] = useState<
-    { address: string; label: string }[]
-  >([]);
   const [mintResult, setMintResult] = useState<string | null>(null);
   const [mintBusy, setMintBusy] = useState(false);
   const [awardOpen, setAwardOpen] = useState(false);
@@ -220,45 +217,6 @@ function OwnerBody({ tab }: { tab: OwnerTab }) {
   useEffect(() => {
     if (holderParam) setMintHolder(holderParam);
   }, [holderParam]);
-
-  useEffect(() => {
-    const map = new Map<string, string>();
-    void (async () => {
-      try {
-        const lors = await apiGet<{ lors: { holder: string }[] }>("/lors?limit=40");
-        for (const l of lors.lors ?? []) {
-          if (l.holder) map.set(l.holder.toLowerCase(), "LOR holder");
-        }
-      } catch {
-        /* ignore */
-      }
-      try {
-        // Recent mandates only — do not fan out /bids (blows public RPC rate limits).
-        const mans = await apiGet<{ mandates: MandateRow[] }>("/mandates?limit=40");
-        for (const m of mans.mandates ?? []) {
-          if (m.winner && m.winner !== "0x0000000000000000000000000000000000000000") {
-            map.set(m.winner.toLowerCase(), `Winner · mandate #${m.mandateId}`);
-          }
-          if (m.publisher) {
-            map.set(m.publisher.toLowerCase(), map.get(m.publisher.toLowerCase()) ?? "Publisher");
-          }
-        }
-      } catch {
-        /* ignore */
-      }
-      if (castActive) {
-        for (const r of cast.roles) {
-          if (!r.address) continue;
-          if (/operator|maint|energy|replacement/i.test(r.role)) {
-            map.set(r.address.toLowerCase(), r.label ?? r.role);
-          }
-        }
-      }
-      setOperatorCandidates(
-        [...map.entries()].map(([addr, label]) => ({ address: addr, label })).slice(0, 32),
-      );
-    })();
-  }, [publish.isConfirmed, award.isConfirmed, castActive, cast.roles, cast.lastResult]);
 
   useEffect(() => {
     if (tab !== "mandates" || !mandateParam || !mandates) return;
@@ -362,30 +320,7 @@ function OwnerBody({ tab }: { tab: OwnerTab }) {
           Grant an operator on-chain authority for a specific scope (e.g. energy-revenue, maintenance).
         </p>
 
-        <p className="muted" style={{ fontSize: "0.85rem", marginBottom: "0.35rem" }}>
-          Select an operator (LOR holders, mandate bidders/winners, demo roles)
-        </p>
-        {operatorCandidates.length === 0 ? (
-          <p className="muted" style={{ marginBottom: "0.75rem" }}>
-            Loading known operators… If none appear, paste an address below.
-          </p>
-        ) : (
-          <div className="chip-row" style={{ marginBottom: "0.85rem" }}>
-            {operatorCandidates.map((c) => (
-              <button
-                key={c.address}
-                type="button"
-                className={`picker-chip${mintHolder.toLowerCase() === c.address ? " active" : ""}`}
-                onClick={() => setMintHolder(c.address)}
-                title={c.address}
-              >
-                {c.label} · {shortAddr(c.address)}
-              </button>
-            ))}
-          </div>
-        )}
-
-        <label htmlFor="mint-holder">Selected operator</label>
+        <label htmlFor="mint-holder">Operator wallet</label>
         <input
           id="mint-holder"
           value={mintHolder}
