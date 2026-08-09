@@ -16,7 +16,7 @@ Built on Monad · Powered by the Cleanverse Compliance Stack
 | --- | --- |
 | **Live app (Railway)** | [opera-web-production.up.railway.app](https://opera-web-production.up.railway.app) |
 | **Live API** | [opera-backend-production.up.railway.app](https://opera-backend-production.up.railway.app) (`GET /health` → `{"ok":true}`) |
-| **Pitch deck** | TBD |
+| **Pitch deck** | [opera-pitch.pages.dev](https://opera-pitch.pages.dev/) |
 | **Demo video** | [YouTube](https://www.youtube.com/watch?v=mgChF-R9C2Q) |
 | **Source repository** | [github.com/SamFelix03/opera](https://github.com/SamFelix03/opera) |
 | **Sample audit export** | [d76fd19d…json](https://github.com/SamFelix03/opera/blob/master/data/demo-exports/d76fd19d-3718-488e-b0a3-f2b0aa64b545.json) — live Monad + Cleanverse A-Token run (`settlement.mode: "opera-atoken"`), 48 events, EIP-191 signed |
@@ -80,8 +80,7 @@ Sample on-chain txs from the export above (Monad testnet):
 ### Quick start
 
 ```bash
-cp config/.env.example config/.env   # CLEANVERSE_*, DEPLOYER_*, MONAD_*
-# Optional: CLEANVERSE_VALIDATOR_POOL=<Ownable pool, e.g. ScoreStore>
+cp config/.env.example config/.env   # CLEANVERSE_*, DEPLOYER_*, MONAD_*, CLEANVERSE_VALIDATOR_POOL
 pnpm install
 pnpm --filter @opera/backend dev     # :8787
 pnpm --filter @opera/web dev         # :5173 → proxies /api
@@ -97,7 +96,7 @@ Contracts are already deployed — see addresses above. Demo cast: open Cast HQ 
 
 Opera Protocol is a compliance-native RWA lifecycle platform on Monad. It models who is authorized to operate a tokenized asset — collect revenue, service it, distribute proceeds — and continuously reprices that authority from Cleanverse identity and transfer compliance.
 
-The central instrument is the **Living Operating Right (LOR)**: an on-chain right whose yield, transfer cost, and market status move with the holder's compliance score. Settlement uses Cleanverse A-Token (`OPRACVA3275` / oCVA). Identity uses Cleanverse A-Pass. Economic actions are gated with `verify_apass` and, when configured, Cleanverse Validator `verify`.
+The central instrument is the **Living Operating Right (LOR)**: an on-chain right whose yield, transfer cost, and market status move with the holder's compliance score. Settlement uses Cleanverse A-Token (`OPRACVA3275` / oCVA). Identity uses Cleanverse A-Pass. Economic actions are gated with `verify_apass` and Cleanverse Validator `verify` against the ScoreStore compliance pool.
 
 Three primitives ship in this build:
 
@@ -105,7 +104,7 @@ Three primitives ship in this build:
 - **Agent Mandate Market** — publish / bid / award mandates with oCVA stake; local `OperaAgent` can bid and operate
 - **Rights Price Oracle** — `recordPrice` + TWAP for asset categories
 
-> **TRACK FIT:** CVA settlement, CVI/A-Pass identity, CCP validator eligibility (when pool set), Travel Rule download after key txs, and score-gated LOR lifecycle on Monad testnet.
+> **TRACK FIT:** CVA settlement, CVI/A-Pass identity, CCP validator eligibility, Travel Rule downloads after key txs, and score-gated LOR lifecycle on Monad testnet.
 
 ---
 
@@ -167,11 +166,11 @@ Scores are written to `ScoreStore` by an authorised writer. Weights live in [sco
 | Signal                   | Source in this build                                                                                         | Weight |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------ | ------ |
 | CVI tenure               | A-Pass `registeredAt` / `expirationTime` → tenure days                                                       | 40%    |
-| CCP eligibility          | `validator/verify` when `CLEANVERSE_VALIDATOR_POOL` is set; else `query_txs` history length as a proxy       | 40%    |
-| Travel Rule completeness | `query_txs` count as completeness proxy; `download_travel_rule` after distribute/acquire for audit artefacts | 20%    |
+| CCP eligibility          | `validator/verify` against ScoreStore pool (`CLEANVERSE_VALIDATOR_POOL`); `query_txs` as supporting signal   | 40%    |
+| Travel Rule completeness | `query_txs` transfer history + `download_travel_rule` after distribute/acquire for audit artefacts           | 20%    |
 
 
-Frozen A-Pass (`status=2`) multiplies raw score by **0.35** (demo 88 → 31). Worker interval defaults to ~15s when `WORKERS_ENABLED=1` (not per-block).
+Frozen A-Pass (`status=2`) multiplies raw score by **0.35** (demo 88 → 31). Score worker ticks on `SCORE_INTERVAL_MS` (~15s) when `WORKERS_ENABLED=1`.
 
 #### The Three Economic Mechanisms
 
@@ -194,7 +193,7 @@ Frozen A-Pass (`status=2`) multiplies raw score by **0.35** (demo 88 → 31). Wo
 
 - Owner publishes a mandate on `MandateRegistry`: `minScore`, `jurisdictionRoot`, `stakeAmount`, `maxSpendPerTx`
 - Operators (desk or `OperaAgent`) approve oCVA and `bid`
-- Before bid, backend enforces `verify_apass`, optional validator eligibility, and A-Pass `countries` vs `jurisdictionRoot` (demo: SG)
+- Before bid, backend enforces `verify_apass`, validator eligibility, and A-Pass `countries` vs `jurisdictionRoot` (demo: SG)
 - Owner awards a winner; stake settles in oCVA
 
 
@@ -211,81 +210,77 @@ Frozen A-Pass (`status=2`) multiplies raw score by **0.35** (demo 88 → 31). Wo
 
 Opera wires Cleanverse cooperate APIs for identity, settlement, CCP eligibility, Travel Rule artefacts, and institutional lookups. Primary helpers: [cleanverse-helpers.ts](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/lib/cleanverse-helpers.ts) · client: [cleanverse-client](https://github.com/SamFelix03/opera/blob/master/packages/cleanverse-client/src/index.ts).
 
+Env used by the backend: `CLEANVERSE_BASE_URL`, `CLEANVERSE_API_ID`, `CLEANVERSE_API_KEY`, `CLEANVERSE_VALIDATOR_POOL` (ScoreStore address).
+
 ### 5.0 Integration map
 
+| # | Capability | Role in Opera | Code |
+| --- | --- | --- | --- |
+| 1 | AES-256-CBC | Encrypted write bodies | cleanverse-client |
+| 2 | Webhook HMAC | A-Token apply callbacks on `POST /webhooks/atoken-apply` | [backend webhook](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/index.ts) |
+| 3 | `generate_apass` | Identity bootstrap with `identityDataList` + `issuingCountryISO2` (SG) | `ensureApass` |
+| 4 | `query_apass` (+ list for `registeredAt`) | Status, countries, tenure | `queryApassStatus` |
+| 5 | `update_status` | Freeze (`2`) / activate (`1`) | helpers · cast · product |
+| 6 | `verify_apass` (code 4) | Hard gate on mint / bid / acquire / distribute | `requireComplianceForAction` |
+| 7 | `query_apass_list` | Institution roster + tenure backfill | `GET /v1/apass/list` |
+| 8 | Country tags | Mandate geo before bid (`jurisdictionRoot` vs A-Pass `countries`) | `requireJurisdiction` |
+| 9 | A-Token launch + `query_apply_status` + webhook | Settlement token `OPRACVA3275` | [launch script](https://github.com/SamFelix03/opera/blob/master/scripts/launch-opera-atoken.ts) |
+| 10 | A-Token settlement (oCVA) | Stakes, acquire, revenue | [deployments](https://github.com/SamFelix03/opera/blob/master/config/deployments/monad-testnet.json) |
+| 11 | A-Token A-Pass transfer policy | Frozen seller → `APassNotActive`; acquire temp-activates seller | [chain-errors](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/lib/chain-errors.ts) |
+| 12 | `atoken/add_rule` + `rules` | SG country whitelist on oCVA | `POST /v1/atoken/rules/ensure-sg` · [script](https://github.com/SamFelix03/opera/blob/master/scripts/ensure-atoken-sg-rule.ts) |
+| 13 | Validator grant / register / `verify` / rules | CCP pool = ScoreStore; eligibility gate + score CCP term | [register script](https://github.com/SamFelix03/opera/blob/master/scripts/register-validator-pool.ts) |
+| 14 | `query_txs` | Transfer history for score TR / CCP signals | [score-worker](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/score-worker.ts) |
+| 15 | `download_travel_rule` | After distribute/acquire; audit pack `cleanverse.travelRule` | helpers · `POST /v1/travel-rule` |
+| 16 | `query_deposit_address` | Deposit wallet lookup | `GET /v1/deposit-address/:address` |
+| 17 | `query_institution_white_list` | Institution whitelist read | `GET /v1/institution/whitelist` |
+| 18 | EIP-191 `signOwnerMessage` | Validator grant/register over Ownable `owner()` | register-validator-pool.ts |
 
-| #   | Capability                                | Role in Opera                                                     | Code                                                                                                                                                      |
-| --- | ----------------------------------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | AES-256-CBC                               | Encrypted write bodies                                            | cleanverse-client                                                                                                                                         |
-| 2   | Webhook HMAC                              | A-Token apply callbacks                                           | `index.ts` [webhook](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/index.ts)                                                       |
-| 3   | `generate_apass`                          | Identity bootstrap                                                | `ensureApass`                                                                                                                                             |
-| 4   | `query_apass` (+ list for `registeredAt`) | Status, countries, tenure                                         | `queryApassStatus`                                                                                                                                        |
-| 5   | `update_status`                           | Freeze / activate                                                 | helpers · cast · product                                                                                                                                  |
-| 6   | `verify_apass` (code 4)                   | Hard gate on mint / bid / acquire / distribute                    | `requireComplianceForAction`                                                                                                                              |
-| 7   | `query_apass_list`                        | Institution roster + tenure backfill                              | `GET /v1/apass/list`                                                                                                                                      |
-| 8   | Country tags                              | Mandate geo before bid (`jurisdictionRoot` vs A-Pass `countries`) | `requireJurisdiction`                                                                                                                                     |
-| 9   | A-Token launch + webhook                  | Settlement token `OPRACVA3275`                                    | [launch script](https://github.com/SamFelix03/opera/blob/master/scripts/launch-opera-atoken.ts)                                                           |
-| 10  | A-Token settlement (oCVA)                 | Stakes, acquire, revenue                                          | [deployments](https://github.com/SamFelix03/opera/blob/master/config/deployments/monad-testnet.json)                                                      |
-| 11  | A-Token A-Pass transfer policy            | Frozen seller → `APassNotActive`; acquire temp-activates seller   | [chain-errors](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/lib/chain-errors.ts)                                                  |
-| 12  | `atoken/add_rule` + `rules`               | SG country whitelist on oCVA                                      | `POST /v1/atoken/rules/ensure-sg` · [script](https://github.com/SamFelix03/opera/blob/master/scripts/ensure-atoken-sg-rule.ts)                            |
-| 13  | Validator `verify`                        | CCP eligibility gate + score CCP term                             | Requires `CLEANVERSE_VALIDATOR_POOL` (ScoreStore) · [register script](https://github.com/SamFelix03/opera/blob/master/scripts/register-validator-pool.ts) |
-| 14  | `query_txs`                               | Travel Rule completeness proxy; CCP proxy if pool unset           | [score-worker](https://github.com/SamFelix03/opera/blob/master/packages/backend/src/score-worker.ts)                                                      |
-| 15  | `download_travel_rule`                    | After distribute/acquire; audit pack `cleanverse.travelRule`      | helpers · `POST /v1/travel-rule`                                                                                                                          |
-| 16  | `query_deposit_address`                   | Deposit wallet lookup                                             | `GET /v1/deposit-address/:address`                                                                                                                        |
-| 17  | `query_institution_white_list`            | Institution whitelist read                                        | `GET /v1/institution/whitelist`                                                                                                                           |
-| 18  | EIP-191 `signOwnerMessage`                | Validator grant/register over Ownable pool                        | register-validator-pool.ts                                                                                                                                |
-
-
-Client also includes Fiat Ramp helpers (`query_ramp_*`, `create_ramp_widget_url`) — reserved for a live product with real funds; unused in this build.
+Unified gate for economic actions: `requireComplianceForAction` = `verify_apass` + jurisdiction match + `validator/verify`.
 
 ### 5.1 A-Pass (CVI identity)
 
 1. Generate / query / activate (`status=1`) / freeze (`status=2`)
-2. Freeze drives score collapse in demo and worker paths
-3. Tenure feeds the 40% CVI score term
-4. Country tags gate bids when mandate `jurisdictionRoot` is set (demo: `keccak256("SG")`)
-5. `verify_apass` hard-gates mint, bid, acquire, distribute
-6. Product APIs: `POST /v1/apass/ensure|freeze|activate`, `GET /v1/apass/list`; cast actions mirror these
+2. Country tags from `issuingCountryISO2` at generate (demo: SG)
+3. Freeze drives score collapse in demo and worker paths
+4. Tenure feeds the 40% CVI score term
+5. Country tags gate bids when mandate `jurisdictionRoot` is set (`keccak256("SG")`)
+6. `verify_apass` hard-gates mint, bid, acquire, distribute
+7. A-Pass ensured on operators **and** protocol contracts that receive oCVA (`MandateRegistry`, `LORRegistry`, `RevenueManager`)
+8. Product APIs: `POST /v1/apass/ensure|freeze|activate`, `GET /v1/apass/list`; cast actions mirror these
 
-Jurisdiction matching runs in the backend before `bid` (not inside the Solidity `bid` function).
+Backend enforces jurisdiction before `bid` via A-Pass `countries` vs mandate `jurisdictionRoot`.
 
 ### 5.2 A-Token (CVA settlement)
 
-Cleanverse LAUNCH A-Token `OPRACVA3275` is the settlement ERC-20 for stakes, acquire payments, and revenue. SG allow-rule via `atoken/add_rule`. Frozen A-Pass cannot receive oCVA — acquire temporarily activates the seller, settles, then re-freezes when the demo path requires it.
+Cleanverse LAUNCH A-Token `OPRACVA3275` is the settlement ERC-20 for stakes, acquire payments, and revenue. SG allow-rule via `atoken/add_rule`. Frozen A-Pass cannot receive oCVA — acquire temporarily activates the seller, settles, then re-freezes when the sanctions path requires it.
 
 ### 5.3 CCP eligibility & Travel Rule
 
-- **Score weights** 40 / 40 / 20 in `score.ts`
-- `validator/verify` when `CLEANVERSE_VALIDATOR_POOL` is set (local `config/.env` and Railway backend). Soft-skips if unset
-- Pool registration uses an **Ownable** contract (ScoreStore); EOAs fail Cleanverse owner-signature checks
-- **Travel Rule:** `download_travel_rule` after distribute/acquire; results land in demo events and export `cleanverse.travelRule[]` (UAT may return `TR_001` / skip until indexed)
-
-
+- Score weights **40 / 40 / 20** in `score.ts`
+- Compliance pool = **ScoreStore** (Ownable); registered with deployer owner signature; env `CLEANVERSE_VALIDATOR_POOL`
+- `validator/verify` feeds CCP score term and gates mint / bid / acquire / distribute
+- `download_travel_rule` after distribute/acquire; artefacts in demo events and export `cleanverse.travelRule[]`
 
 ### 5.4 Cryptography & webhooks
 
-AES-256-CBC for encrypted cooperate writes; HMAC webhook on raw body for A-Token apply results.
+AES-256-CBC for encrypted cooperate writes; HMAC webhook on raw body for A-Token apply results (`POST /webhooks/atoken-apply`).
 
 ### 5.5 Product surfaces
 
-
-| Surface                | Behavior                                                                                                                                                                                                |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Operator Ensure A-Pass | `/v1/apass/ensure` or cast                                                                                                                                                                              |
-| WalletBar              | oCVA balance on settlement token                                                                                                                                                                        |
-| Market acquire         | Notes frozen-seller A-Pass settlement constraint                                                                                                                                                        |
-| `GET /v1/me`           | Returns A-Pass profile + validator eligibility (UI shows A-Pass status today)                                                                                                                           |
-| Product APIs           | `/v1/apass/list`, deposit address, institution whitelist, travel-rule, atoken rules — available to SIWE clients via [api.ts](https://github.com/SamFelix03/opera/blob/master/packages/web/src/api.ts) |
-
-
-
+| Surface | Behavior |
+| --- | --- |
+| Operator Ensure A-Pass | `/v1/apass/ensure` or cast |
+| WalletBar | oCVA balance on settlement token |
+| Market acquire | Frozen-seller A-Pass settlement note |
+| `GET /v1/me` | A-Pass profile + validator eligibility |
+| Product APIs | `/v1/apass/list`, deposit address, institution whitelist, travel-rule, atoken rules — [api.ts](https://github.com/SamFelix03/opera/blob/master/packages/web/src/api.ts) |
 
 ### 5.6 Demo path (Cleanverse + chain)
 
 ```
 setupIdentities     → generate/query A-Pass (SG country tags)
 prepareCast/fund    → ensureApass on operators + protocol contracts; fund oCVA
-hire (cast desks)   → verify_apass + jurisdiction + validator (if pool set) before mint/bid
+hire (cast desks)   → verify_apass + jurisdiction + validator before mint/bid
 normalOps           → verify_apass; distribute oCVA; downloadTravelRule → audit events
 sanctionsEvent      → update_status(2) → score 88→31 → auto-list
 replacementAcquire  → buyer compliance gate; seller ensure + verify; acquireLOR; TR; re-freeze
@@ -318,11 +313,11 @@ Architecture today: Fastify + SQLite + ~15s workers + Monad public RPC.
 
 ### Mid-term
 
-1. Richer CCP / AML outcomes as score inputs when Cleanverse exposes them
-2. Event-driven auto-list (score writer → indexer → `setAutoListed`)
-3. Acquire settlement that does not require temp-activating a frozen seller (treasury or escrow receive path)
-4. Optional automated mandate award
-5. Record LOR TWAP on every successful `acquireLOR` / `transferLOR`
+1. Event-driven auto-list (score writer → indexer → `setAutoListed`)
+2. Treasury / escrow receive path for distress acquires
+3. Automated mandate award when score and stake constraints are met
+4. Record LOR TWAP on every successful `acquireLOR` / `transferLOR`
+5. Multi-dimensional score weights and richer CCP outcome feeds as Cleanverse expands them
 
 
 
@@ -452,14 +447,14 @@ Transfer fee: [LORRegistry.sol](https://github.com/SamFelix03/opera/blob/master/
 ### 9.2 Cleanverse APIs in use
 
 
-| API                                              | Use                                         |
-| ------------------------------------------------ | ------------------------------------------- |
-| A-Pass generate / query / update / verify / list | Identity, tenure, geo, hard gates           |
-| A-Token launch / rules / webhook                 | Settlement + SG country rule                |
-| Validator grant / register / verify / rules      | CCP pool on ScoreStore; eligibility gates   |
-| `query_txs`                                      | TR completeness / CCP proxy when pool unset |
-| `download_travel_rule`                           | Post-tx + audit pack                        |
-| Deposit address / institution whitelist          | Product read APIs                           |
+| API | Use |
+| --- | --- |
+| A-Pass generate / query / update / verify / list | Identity, tenure, geo, hard gates |
+| A-Token launch / apply status / rules / webhook | Settlement + SG country rule |
+| Validator grant / register / verify / rules | CCP pool on ScoreStore; eligibility gates |
+| `query_txs` | Transfer history for score signals |
+| `download_travel_rule` | Post-tx + audit pack |
+| Deposit address / institution whitelist | Product read APIs |
 
 
 
@@ -508,7 +503,7 @@ Transfer fee: [LORRegistry.sol](https://github.com/SamFelix03/opera/blob/master/
 | LOR transfer          | `acquireLOR` on Market / cast                                            |
 | Revenue distribution  | oCVA `distribute` with score split; Travel Rule download                 |
 | Audit export          | Signed Opera event pack JSON/PDF                                         |
-| CCP eligibility       | `validator/verify` when `CLEANVERSE_VALIDATOR_POOL` set                  |
+| CCP eligibility       | `validator/verify` against ScoreStore pool (`CLEANVERSE_VALIDATOR_POOL`) |
 
 
 ---
@@ -541,7 +536,7 @@ Transfer fee: [LORRegistry.sol](https://github.com/SamFelix03/opera/blob/master/
 - DAO governance for LOR policy on community assets
 - Insurance pricing from LOR score feeds
 - Sovereign / fund-of-fund mandate structures
-- Fiat settlement via Cleanverse Gateway / Fiat Ramp when live with real funds (client methods already stubbed; settlement today is oCVA only)
+- Fiat settlement via Cleanverse Gateway / Fiat Ramp for live products with real funds
 
 ---
 
@@ -556,7 +551,7 @@ Transfer fee: [LORRegistry.sol](https://github.com/SamFelix03/opera/blob/master/
 | CVI integrated into core logic    | A-Pass status, tenure, freeze → score → yield / listing; `verify_apass` on economic actions                         |
 | CVA integrated into core logic    | Stakes, acquire, revenue use Cleanverse A-Token oCVA                                                                |
 | Accredited-investor whitelisting  | Score / `minScore` gates; A-Token SG country rule; institution whitelist read API                                   |
-| Transfer restrictions             | On-chain score gates + A-Token A-Pass policy; `validator/verify` on mint / bid / acquire / distribute when pool set |
+| Transfer restrictions             | On-chain score gates + A-Token A-Pass policy; `validator/verify` on mint / bid / acquire / distribute |
 | Travel Rule-compliant settlement  | `download_travel_rule` after distribute / acquire; artefacts in audit pack                                          |
 
 
