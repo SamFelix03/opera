@@ -130,6 +130,7 @@ function OperatorBody({ tab }: { tab: OpTab }) {
     apass?: { status: number | null };
   } | null>(null);
   const [openMandates, setOpenMandates] = useState<MandateRow[] | null>(null);
+  const [openMandatesError, setOpenMandatesError] = useState<string | null>(null);
   const [heldLors, setHeldLors] = useState<LorRow[] | null>(null);
   const [bidId, setBidId] = useState("");
   const [bidOpen, setBidOpen] = useState(false);
@@ -218,9 +219,13 @@ function OperatorBody({ tab }: { tab: OpTab }) {
 
   useEffect(() => {
     if (tab !== "bid" && tab !== "overview") return;
-    void apiGet<{ mandates: MandateRow[] }>("/mandates?open=1&limit=100")
+    setOpenMandatesError(null);
+    void apiGet<{ mandates: MandateRow[] }>("/mandates?open=1&limit=50")
       .then((res) => setOpenMandates(res.mandates ?? []))
-      .catch(() => setOpenMandates([]));
+      .catch((e) => {
+        setOpenMandates([]);
+        setOpenMandatesError(e instanceof Error ? e.message : String(e));
+      });
   }, [tab, bid.isConfirmed, cast.lastResult]);
 
   useEffect(() => {
@@ -381,6 +386,11 @@ function OperatorBody({ tab }: { tab: OpTab }) {
             </span>
           </div>
 
+          {openMandatesError ? (
+            <div className="alert error" style={{ marginBottom: "0.75rem" }}>
+              Could not load open mandates: {openMandatesError}
+            </div>
+          ) : null}
           {openMandates === null ? (
             <p className="muted">Loading…</p>
           ) : openMandates.length === 0 ? (

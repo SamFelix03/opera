@@ -23,8 +23,6 @@ import {
   getWalletProfile,
   mintLor,
   deployments,
-  getDemoRun,
-  normalizeRoles,
 } from "../api";
 import { formatUnits6, shortAddr } from "../lib/format";
 
@@ -124,6 +122,7 @@ function OwnerBody({ tab }: { tab: OwnerTab }) {
     apass?: { status: number | null };
   } | null>(null);
   const [mandates, setMandates] = useState<MandateRow[] | null>(null);
+  const [mandatesError, setMandatesError] = useState<string | null>(null);
   const [mintScope, setMintScope] = useState("energy-revenue");
   const [mintHolder, setMintHolder] = useState(holderParam ?? "");
   const [operatorCandidates, setOperatorCandidates] = useState<
@@ -146,11 +145,15 @@ function OwnerBody({ tab }: { tab: OwnerTab }) {
       ? (cast.roles.find((r) => r.role === "owner")?.address ?? viewer)
       : viewer;
     const q = pub
-      ? `/mandates?publisher=${encodeURIComponent(pub)}&limit=100`
-      : "/mandates?limit=100";
+      ? `/mandates?publisher=${encodeURIComponent(pub)}&limit=50`
+      : "/mandates?limit=50";
+    setMandatesError(null);
     return apiGet<{ mandates: MandateRow[] }>(q)
       .then((res) => setMandates(res.mandates ?? []))
-      .catch(() => setMandates([]));
+      .catch((e) => {
+        setMandates([]);
+        setMandatesError(e instanceof Error ? e.message : String(e));
+      });
   };
 
   const { data: nextLorId } = useReadContract({
@@ -194,10 +197,9 @@ function OwnerBody({ tab }: { tab: OwnerTab }) {
 
   useEffect(() => {
     const map = new Map<string, string>();
-    const runId = localStorage.getItem("opera.demo.runId");
     void (async () => {
       try {
-        const lors = await apiGet<{ lors: { holder: string }[] }>("/lors");
+        const lors = await apiGet<{ lors: { holder: string }[] }>("/lors?limit=40");
         for (const l of lors.lors ?? []) {
           if (l.holder) map.set(l.holder.toLowerCase(), "LOR holder");
         }
@@ -205,46 +207,18 @@ function OwnerBody({ tab }: { tab: OwnerTab }) {
         /* ignore */
       }
       try {
-        const mans = await apiGet<{ mandates: MandateRow[] }>("/mandates");
-        const list = mans.mandates ?? [];
-        for (const m of list) {
+        // Recent mandates only — do not fan out /bids (blows public RPC rate limits).
+        const mans = await apiGet<{ mandates: MandateRow[] }>("/mandates?limit=40");
+        for (const m of mans.mandates ?? []) {
           if (m.winner && m.winner !== "0x0000000000000000000000000000000000000000") {
             map.set(m.winner.toLowerCase(), `Winner · mandate #${m.mandateId}`);
           }
+          if (m.publisher) {
+            map.set(m.publisher.toLowerCase(), map.get(m.publisher.toLowerCase()) ?? "Publisher");
+          }
         }
-        const openIds = list.filter((m) => m.open && !m.awarded).map((m) => m.mandateId).slice(0, 12);
-        await Promise.all(
-          openIds.map(async (id) => {
-            try {
-              const res = await apiGet<{ bids: BidRow[] }>(`/mandates/${id}/bids`);
-              for (const b of res.bids ?? []) {
-                if (b.bidder && b.active !== false) {
-                  map.set(b.bidder.toLowerCase(), `Bidder · mandate #${id}`);
-                }
-              }
-            } catch {
-              /* ignore */
-            }
-          }),
-        );
       } catch {
         /* ignore */
-      }
-      if (runId) {
-        try {
-          const run = await getDemoRun(runId);
-          for (const r of normalizeRoles(run.roles)) {
-            if (!r.address) continue;
-            const label = r.label ?? r.role;
-            if (/operator|maint|energy|replacement/i.test(r.role)) {
-              map.set(r.address.toLowerCase(), label);
-            } else {
-              map.set(r.address.toLowerCase(), map.get(r.address.toLowerCase()) ?? label);
-            }
-          }
-        } catch {
-          /* ignore */
-        }
       }
       if (castActive) {
         for (const r of cast.roles) {
@@ -499,6 +473,14 @@ function OwnerBody({ tab }: { tab: OwnerTab }) {
             </span>
           </div>
           <div className="split-list-scroll">
+            {mandatesError ? (
+              <div className="alert error" style={{ marginBottom: "0.75rem" }}>
+                Could not load mandates: {mandatesError}
+                <button type="button" className="btn secondary" style={{ marginLeft: "0.5rem" }} onClick={() => void reloadMandates()}>
+                  Retry
+                </button>
+              </div>
+            ) : null}
             {mandates === null ? (
               <p className="muted">Loading…</p>
             ) : mine.length === 0 ? (
