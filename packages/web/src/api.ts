@@ -44,6 +44,14 @@ export async function apiPost<T>(path: string, body?: unknown): Promise<T> {
   return parse<T>(res);
 }
 
+export async function indexMandate(mandateId: string | number): Promise<void> {
+  await apiPost("/chain/index/mandate", { mandateId: String(mandateId) });
+}
+
+export async function indexLor(lorId: string | number): Promise<void> {
+  await apiPost("/chain/index/lor", { lorId: String(lorId) });
+}
+
 export async function apiDownload(path: string, filename: string): Promise<void> {
   const res = await fetch(`${API}${path}`);
   if (!res.ok) throw new ApiError(res.status, await res.text());

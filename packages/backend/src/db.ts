@@ -1,6 +1,7 @@
 import Database from "better-sqlite3";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
+import { ensureChainIndexTables } from "./chain-index.js";
 
 export type AuditEvent = {
   id?: number;
@@ -55,6 +56,7 @@ export function openAuditDb(path: string): Database.Database {
     CREATE INDEX IF NOT EXISTS idx_notifications_addr
       ON notifications(address, id DESC);
   `);
+  ensureChainIndexTables(db);
   return db;
 }
 

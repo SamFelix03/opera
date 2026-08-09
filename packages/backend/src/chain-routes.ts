@@ -1,243 +1,102 @@
 /**
- * On-chain market + playground config APIs (read Monad; owner writes via deployer key).
+ * On-chain market + playground config APIs.
+ * Mandate/LOR lists are served from the SQLite index (see chain-index / chain-sync).
  */
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import type Database from "better-sqlite3";
-import { keccak256, toBytes, type Hex } from "viem";
+import {
+  bootstrapLorsFromChain,
+  bootstrapMandatesFromChain,
+  hydrateBidsFromChain,
+  hydrateLorFromChain,
+  hydrateMandateFromChain,
+  listIndexedBids,
+  listIndexedLors,
+  listIndexedMandates,
+  lorCount,
+  mandateCount,
+} from "./chain-index.js";
 import {
   CATEGORY_SOLAR,
   createChainCtx,
   lorAbi,
-  manAbi,
   oracleAbi,
   write,
   waitTx,
 } from "./demo/chain.js";
 import { insertAuditEvent } from "./db.js";
 
-function scopeLabel(scope: Hex): string {
-  const known: Record<string, string> = {
-    [keccak256(toBytes("energy-revenue")).toLowerCase()]: "energy-revenue",
-    [keccak256(toBytes("maintenance")).toLowerCase()]: "maintenance",
-  };
-  return known[scope.toLowerCase()] ?? scope;
+let bootstrapping = false;
+
+async function ensureIndexWarm(db: Database.Database): Promise<void> {
+  if (bootstrapping) return;
+  if (mandateCount(db) > 0 && lorCount(db) > 0) return;
+  bootstrapping = true;
+  try {
+    if (mandateCount(db) === 0) await bootstrapMandatesFromChain(db, 200);
+    if (lorCount(db) === 0) await bootstrapLorsFromChain(db, 200);
+  } catch (e) {
+    console.warn("[chain-routes] bootstrap failed", e);
+  } finally {
+    bootstrapping = false;
+  }
 }
-
-/** How many recent IDs to scan (newest-first). Keeps us under public RPC rate limits. */
-const SCAN_WINDOW = 80n;
-
-type MandateTuple = readonly [
-  bigint,
-  Hex,
-  bigint,
-  Hex,
-  bigint,
-  bigint,
-  Hex,
-  Hex,
-  boolean,
-  boolean,
-];
-
-type LorTuple = readonly [bigint, Hex, Hex, bigint, boolean, boolean];
-
-let mandatesCache: { at: number; next: string; items: Record<string, unknown>[] } | null =
-  null;
-const MANDATES_CACHE_MS = 8_000;
 
 export async function registerChainRoutes(
   app: FastifyInstance,
   db: Database.Database,
 ) {
-  app.get("/lors", async (req: FastifyRequest, reply: FastifyReply) => {
+  app.get("/lors", async (req: FastifyRequest) => {
+    await ensureIndexWarm(db);
     const q = req.query as { listed?: string; limit?: string; holder?: string };
     const listedOnly = q.listed === "1" || q.listed === "true";
     const limit = Math.min(Number(q.limit ?? 50), 200);
-    const holderFilter = q.holder?.toLowerCase() ?? null;
+    const holderFilter = q.holder ?? null;
+
+    const { lors, nextId } = listIndexedLors(db, {
+      listedOnly,
+      holder: holderFilter,
+      limit,
+    });
+
+    let autoListThreshold = 0;
+    let settlementToken: string | undefined;
     try {
       const ctx = createChainCtx();
-      const registry = ctx.deployment.contracts.LORRegistry;
-      const [next, threshold] = await Promise.all([
-        ctx.publicClient.readContract({
-          address: registry,
-          abi: lorAbi,
-          functionName: "nextId",
-        }),
-        ctx.publicClient.readContract({
-          address: registry,
-          abi: lorAbi,
-          functionName: "autoListThreshold",
-        }),
-      ]);
-
-      const ids: bigint[] = [];
-      const start = next > 1n ? next - 1n : 0n;
-      for (let id = start; id >= 1n && ids.length < Number(SCAN_WINDOW); id--) {
-        ids.push(id);
-      }
-
-      const rows = ids.length
-        ? await ctx.publicClient.multicall({
-            allowFailure: true,
-            contracts: ids.map((id) => ({
-              address: registry,
-              abi: lorAbi,
-              functionName: "lors" as const,
-              args: [id] as const,
-            })),
-          })
-        : [];
-
-      const scoreIds: bigint[] = [];
-      const prelim: { id: bigint; row: LorTuple }[] = [];
-      for (let i = 0; i < ids.length; i++) {
-        const r = rows[i];
-        if (r.status !== "success" || !r.result) continue;
-        const row = r.result as LorTuple;
-        const [, holder, , , autoListed, active] = row;
-        if (!active) continue;
-        if (listedOnly && !autoListed) continue;
-        if (holderFilter && String(holder).toLowerCase() !== holderFilter) continue;
-        prelim.push({ id: ids[i]!, row });
-        scoreIds.push(ids[i]!);
-        if (prelim.length >= limit) break;
-      }
-
-      const scores = scoreIds.length
-        ? await ctx.publicClient.multicall({
-            allowFailure: true,
-            contracts: scoreIds.map((id) => ({
-              address: registry,
-              abi: lorAbi,
-              functionName: "minScoreToHold" as const,
-              args: [id] as const,
-            })),
-          })
-        : [];
-
-      const items: Record<string, unknown>[] = prelim.map((p, i) => {
-        const [assetId, holder, scope, price, autoListed, active] = p.row;
-        const minScore =
-          scores[i]?.status === "success" ? (scores[i]!.result as bigint) : 0n;
-        return {
-          lorId: p.id.toString(),
-          assetId: assetId.toString(),
-          holder,
-          scope: scopeLabel(scope),
-          scopeRaw: scope,
-          price: price.toString(),
-          autoListed,
-          active,
-          minScoreToHold: minScore.toString(),
-        };
+      settlementToken = ctx.deployment.settlementToken;
+      const threshold = await ctx.publicClient.readContract({
+        address: ctx.deployment.contracts.LORRegistry,
+        abi: lorAbi,
+        functionName: "autoListThreshold",
       });
-
-      return {
-        autoListThreshold: Number(threshold),
-        settlementToken: ctx.deployment.settlementToken,
-        count: items.length,
-        nextId: next.toString(),
-        lors: items,
-      };
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      return reply.code(502).send({ error: "lor list failed", detail: msg });
+      autoListThreshold = Number(threshold);
+    } catch {
+      /* threshold is decorative; list still works from SQLite */
     }
+
+    return {
+      autoListThreshold,
+      settlementToken,
+      count: lors.length,
+      nextId,
+      lors,
+    };
   });
 
-  app.get("/mandates", async (req: FastifyRequest, reply: FastifyReply) => {
+  app.get("/mandates", async (req: FastifyRequest) => {
+    await ensureIndexWarm(db);
     const q = req.query as { open?: string; limit?: string; publisher?: string };
     const openOnly = q.open === "1" || q.open === "true";
     const limit = Math.min(Number(q.limit ?? 50), 200);
-    const publisherFilter = q.publisher?.toLowerCase() ?? null;
+    const publisherFilter = q.publisher ?? null;
 
-    try {
-      const ctx = createChainCtx();
-      const registry = ctx.deployment.contracts.MandateRegistry;
-      const next = await ctx.publicClient.readContract({
-        address: registry,
-        abi: manAbi,
-        functionName: "nextMandateId",
-      });
+    const { mandates, nextMandateId } = listIndexedMandates(db, {
+      openOnly,
+      publisher: publisherFilter,
+      limit,
+    });
 
-      // Reuse a short cache of the recent window when unfiltered (desks poll often).
-      const cacheKeyOk = !publisherFilter && !openOnly;
-      if (
-        cacheKeyOk &&
-        mandatesCache &&
-        mandatesCache.next === next.toString() &&
-        Date.now() - mandatesCache.at < MANDATES_CACHE_MS
-      ) {
-        const sliced = mandatesCache.items.slice(0, limit);
-        return { count: sliced.length, nextMandateId: next.toString(), mandates: sliced };
-      }
-
-      const ids: bigint[] = [];
-      const start = next > 1n ? next - 1n : 0n;
-      for (let id = start; id >= 1n && ids.length < Number(SCAN_WINDOW); id--) {
-        ids.push(id);
-      }
-
-      const rows = ids.length
-        ? await ctx.publicClient.multicall({
-            allowFailure: true,
-            contracts: ids.map((id) => ({
-              address: registry,
-              abi: manAbi,
-              functionName: "mandates" as const,
-              args: [id] as const,
-            })),
-          })
-        : [];
-
-      const allRecent: Record<string, unknown>[] = [];
-      const items: Record<string, unknown>[] = [];
-      for (let i = 0; i < ids.length; i++) {
-        const r = rows[i];
-        if (r.status !== "success" || !r.result) continue;
-        const m = r.result as MandateTuple;
-        const [
-          assetId,
-          scope,
-          minScore,
-          jurisdictionRoot,
-          stakeAmount,
-          maxSpendPerTx,
-          publisher,
-          winner,
-          open,
-          awarded,
-        ] = m;
-        const row = {
-          mandateId: ids[i]!.toString(),
-          assetId: assetId.toString(),
-          scope: scopeLabel(scope),
-          scopeRaw: scope,
-          minScore: minScore.toString(),
-          jurisdictionRoot,
-          stakeAmount: stakeAmount.toString(),
-          maxSpendPerTx: maxSpendPerTx.toString(),
-          publisher,
-          winner,
-          open,
-          awarded,
-        };
-        allRecent.push(row);
-        if (openOnly && !(open && !awarded)) continue;
-        if (publisherFilter && String(publisher).toLowerCase() !== publisherFilter) continue;
-        items.push(row);
-        if (items.length >= limit) break;
-      }
-
-      if (!publisherFilter && !openOnly) {
-        mandatesCache = { at: Date.now(), next: next.toString(), items: allRecent };
-      }
-
-      return { count: items.length, nextMandateId: next.toString(), mandates: items };
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      return reply.code(502).send({ error: "mandate list failed", detail: msg });
-    }
+    return { count: mandates.length, nextMandateId, mandates };
   });
 
   app.get("/mandates/:id/bids", async (req: FastifyRequest, reply: FastifyReply) => {
@@ -245,33 +104,39 @@ export async function registerChainRoutes(
     if (!/^\d+$/.test(id)) {
       return reply.code(400).send({ error: "invalid mandate id" });
     }
-    const mandateId = BigInt(id);
-    const ctx = createChainCtx();
-    const bids: { index: number; bidder: string; stake: string; active: boolean }[] = [];
-
-    for (let i = 0; i < 200; i++) {
+    const mandateId = Number(id);
+    let bids = listIndexedBids(db, mandateId);
+    if (bids.length === 0) {
       try {
-        const row = await ctx.publicClient.readContract({
-          address: ctx.deployment.contracts.MandateRegistry,
-          abi: manAbi,
-          functionName: "bids",
-          args: [mandateId, BigInt(i)],
-        });
-        const [bidder, stake, active] = row;
-        if (active) {
-          bids.push({
-            index: i,
-            bidder,
-            stake: stake.toString(),
-            active,
-          });
-        }
+        await hydrateBidsFromChain(db, mandateId);
+        bids = listIndexedBids(db, mandateId);
       } catch {
-        break;
+        /* return empty */
       }
     }
-
     return { mandateId: id, count: bids.length, bids };
+  });
+
+  app.post("/chain/index/mandate", async (req: FastifyRequest, reply: FastifyReply) => {
+    const body = req.body as { mandateId?: string | number };
+    const id = Number(body.mandateId);
+    if (!Number.isFinite(id) || id < 1) {
+      return reply.code(400).send({ error: "mandateId required" });
+    }
+    const row = await hydrateMandateFromChain(db, id);
+    if (!row) return reply.code(404).send({ error: "mandate not found on chain" });
+    return { ok: true, mandateId: String(id) };
+  });
+
+  app.post("/chain/index/lor", async (req: FastifyRequest, reply: FastifyReply) => {
+    const body = req.body as { lorId?: string | number };
+    const id = Number(body.lorId);
+    if (!Number.isFinite(id) || id < 1) {
+      return reply.code(400).send({ error: "lorId required" });
+    }
+    const row = await hydrateLorFromChain(db, id);
+    if (!row) return reply.code(404).send({ error: "lor not found on chain" });
+    return { ok: true, lorId: String(id) };
   });
 
   app.get("/oracle/prices", async () => {

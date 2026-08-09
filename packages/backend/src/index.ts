@@ -111,8 +111,8 @@ export async function buildApp(opts?: {
 }
 
 async function main() {
-  const { app } = await buildApp();
-  startWorkers();
+  const { app, db } = await buildApp();
+  startWorkers(db);
   const port = Number(process.env.PORT ?? 8787);
   await app.listen({ port, host: "0.0.0.0" });
 }

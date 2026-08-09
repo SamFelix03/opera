@@ -23,6 +23,13 @@ import {
   autoListLOR,
   recordOraclePrice,
 } from "../lib/chain-helpers.js";
+import {
+  appendBidFromEvent,
+  hydrateLorFromChain,
+  markMandateAwarded,
+  upsertMandate,
+  upsertLor,
+} from "../chain-index.js";
 import { clientFromEnv } from "@opera/cleanverse-client";
 import {
   createChainCtx,
@@ -301,6 +308,18 @@ export async function executeCastAct(
     const result = await mintLOR(ctx, assetId, holderAddr, scopeHash(scope), minScore);
     txs.push({ label: "mintLOR", hash: result.tx });
     ids = { lorId: result.lorId.toString(), scope };
+    upsertLor(db, {
+      lorId: Number(result.lorId),
+      assetId: Number(assetId),
+      holder: holderAddr,
+      scope: scopeHash(scope),
+      price: "0",
+      autoListed: false,
+      active: true,
+      minScoreToHold: Number(minScore),
+      txHash: result.tx,
+    });
+    void hydrateLorFromChain(db, Number(result.lorId), { txHash: result.tx });
     if (scope.includes("energy") || scope === "energy-revenue") {
       updateDemoRun(db, runId, { energyLorId: Number(result.lorId) });
     } else if (scope.includes("maint")) {
@@ -332,6 +351,20 @@ export async function executeCastAct(
     await waitTx(ctx, hash);
     txs.push({ label: "publishMandate", hash });
     ids = { mandateId: nextMan.toString(), scope };
+    upsertMandate(db, {
+      mandateId: Number(nextMan),
+      assetId: Number(assetId),
+      scope: scopeHash(scope),
+      minScore: Number(minScore),
+      jurisdictionRoot: JURISDICTION_SG,
+      stakeAmount: stake.toString(),
+      maxSpendPerTx: maxSpend.toString(),
+      publisher: owner.address,
+      winner: "0x0000000000000000000000000000000000000000",
+      open: true,
+      awarded: false,
+      txHash: hash,
+    });
     if (scope.includes("energy") || scope === "energy-revenue") {
       updateDemoRun(db, runId, { energyMandateId: Number(nextMan) });
     } else {
@@ -361,6 +394,7 @@ export async function executeCastAct(
     await waitTx(ctx, hash);
     txs.push({ label: "award", hash });
     ids = { mandateId: mandateId.toString(), winner };
+    markMandateAwarded(db, Number(mandateId), winner);
     summary = `Awarded mandate #${mandateId} to ${winner.slice(0, 10)}…`;
   } else if (action === "bid") {
     if (!role || !DEMO_ROLES.includes(role)) throw new Error("bid requires operator role");
@@ -401,6 +435,7 @@ export async function executeCastAct(
     await waitTx(ctx, bidHash);
     txs.push({ label: "bid", hash: bidHash });
     ids = { mandateId: mandateId.toString(), stake: stakeAmount.toString() };
+    appendBidFromEvent(db, Number(mandateId), bidder.address, stakeAmount.toString());
     summary = `${role} bid on mandate #${mandateId}`;
   } else if (action === "distribute") {
     if (!role) throw new Error("distribute requires operator role");
@@ -486,6 +521,7 @@ export async function executeCastAct(
     const hash = await autoListLOR(ctx, lorId, price);
     txs.push({ label: "autoList", hash });
     ids = { lorId: lorId.toString(), listPrice: String(args.listPrice ?? "500") };
+    await hydrateLorFromChain(db, Number(lorId), { txHash: hash });
     summary = `Auto-listed LOR #${lorId}`;
   } else if (action === "acquire") {
     const buyerRole = (role as DemoRole) || "replacement";
@@ -528,6 +564,7 @@ export async function executeCastAct(
     await waitTx(ctx, acqHash);
     txs.push({ label: "acquireLOR", hash: acqHash });
     ids = { lorId: lorId.toString(), price: price.toString(), buyer: buyer.address };
+    await hydrateLorFromChain(db, Number(lorId), { txHash: acqHash });
     summary = `${buyerRole} acquired LOR #${lorId}`;
   } else if (action === "ensureApass") {
     if (!role) throw new Error("ensureApass requires role");

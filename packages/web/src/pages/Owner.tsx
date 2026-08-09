@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { RequireWallet } from "../components/RequireWallet";
 import { SiweStatus } from "../components/SiweGate";
@@ -16,13 +16,14 @@ import { usePublishMandate, useAwardMandate } from "../hooks/useOperaWrites";
 import { useSiweSession } from "../hooks/useSiweSession";
 import { useReadContract } from "wagmi";
 import { keccak256, parseUnits, toBytes, type Hex } from "viem";
-import { addresses, lorAbi, revenueAbi } from "../lib/contracts";
+import { addresses, lorAbi, mandateAbi, revenueAbi } from "../lib/contracts";
 import {
   apiGet,
   getMe,
   getWalletProfile,
   mintLor,
   deployments,
+  indexMandate,
 } from "../api";
 import { formatUnits6, shortAddr } from "../lib/format";
 
@@ -139,6 +140,13 @@ function OwnerBody({ tab }: { tab: OwnerTab }) {
   const [publishStake, setPublishStake] = useState("5000");
   const publish = usePublishMandate();
   const award = useAwardMandate();
+  const pendingPublishId = useRef<string | null>(null);
+
+  const { data: nextMandateIdOnChain } = useReadContract({
+    address: addresses.MandateRegistry,
+    abi: mandateAbi,
+    functionName: "nextMandateId",
+  });
 
   const reloadMandates = () => {
     const pub = castActive
@@ -188,7 +196,25 @@ function OwnerBody({ tab }: { tab: OwnerTab }) {
   }, [viewer, castActive, siwe.authenticated, cast.lastResult]);
 
   useEffect(() => {
-    void reloadMandates();
+    void (async () => {
+      if (publish.isConfirmed && pendingPublishId.current) {
+        const id = pendingPublishId.current;
+        pendingPublishId.current = null;
+        try {
+          await indexMandate(id);
+        } catch {
+          /* sync worker will catch up */
+        }
+      }
+      if (award.isConfirmed && selectedMandate?.mandateId) {
+        try {
+          await indexMandate(selectedMandate.mandateId);
+        } catch {
+          /* ignore */
+        }
+      }
+      void reloadMandates();
+    })();
   }, [publish.isConfirmed, award.isConfirmed, cast.lastResult, viewer, castActive, tab]);
 
   useEffect(() => {
@@ -436,7 +462,10 @@ function OwnerBody({ tab }: { tab: OwnerTab }) {
               ) : (
                 <TxButton
                   label="Publish"
-                  onClick={() =>
+                  onClick={() => {
+                    if (nextMandateIdOnChain != null) {
+                      pendingPublishId.current = nextMandateIdOnChain.toString();
+                    }
                     publish.publish({
                       assetId: BigInt(deployments.assetId ?? 1),
                       scope: keccak256(toBytes(publishScope)),
@@ -444,8 +473,8 @@ function OwnerBody({ tab }: { tab: OwnerTab }) {
                       jurisdictionRoot: keccak256(toBytes("SG")),
                       stakeAmount: parseUnits(publishStake, 6),
                       maxSpendPerTx: parseUnits("200000", 6),
-                    })
-                  }
+                    });
+                  }}
                   isPending={publish.isPending}
                   isConfirming={publish.isConfirming}
                   isConfirmed={publish.isConfirmed}

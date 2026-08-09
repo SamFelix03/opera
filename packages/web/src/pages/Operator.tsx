@@ -233,10 +233,9 @@ function OperatorBody({ tab }: { tab: OpTab }) {
       setHeldLors([]);
       return;
     }
-    void apiGet<{ lors: LorRow[] }>("/lors")
+    void apiGet<{ lors: LorRow[] }>(`/lors?holder=${encodeURIComponent(viewer)}&limit=50`)
       .then((res) => {
-        const all = res.lors ?? [];
-        setHeldLors(all.filter((l) => l.holder?.toLowerCase() === viewer.toLowerCase()));
+        setHeldLors(res.lors ?? []);
       })
       .catch(() => setHeldLors([]));
   }, [viewer, cast.lastResult]);

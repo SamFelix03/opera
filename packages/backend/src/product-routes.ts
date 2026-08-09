@@ -10,6 +10,7 @@ import { createChainCtx, scoreAbi, CATEGORY_SOLAR } from "./demo/chain.js";
 import { insertAuditEvent } from "./db.js";
 import { ensureApass, queryApassStatus, freezeWallet, activateWallet } from "./lib/cleanverse-helpers.js";
 import { setScore, mintLOR, autoListLOR, recordOraclePrice } from "./lib/chain-helpers.js";
+import { hydrateLorFromChain, upsertLor } from "./chain-index.js";
 import { computeScore, type ScoreInputs } from "./score.js";
 
 function requireSession(
@@ -185,6 +186,17 @@ export async function registerProductRoutes(
     const scopeHash = keccak256(toBytes(body.scope));
     const holder = getAddress(body.holder) as Hex;
     const result = await mintLOR(ctx, assetId, holder, scopeHash, BigInt(body.minScore ?? 70));
+    upsertLor(db, {
+      lorId: Number(result.lorId),
+      assetId: Number(assetId),
+      holder,
+      scope: scopeHash,
+      price: "0",
+      autoListed: false,
+      active: true,
+      minScoreToHold: Number(body.minScore ?? 70),
+      txHash: result.tx,
+    });
     insertAuditEvent(db, {
       kind: "product.lor.mint",
       payload: JSON.stringify({ lorId: result.lorId.toString(), holder: body.holder, scope: body.scope, tx: result.tx }),
@@ -200,6 +212,7 @@ export async function registerProductRoutes(
     const ctx = createChainCtx();
     const price = parseUnits(body.listPrice ?? "500", ctx.deployment.settlementDecimals ?? 6);
     const tx = await autoListLOR(ctx, BigInt(id), price);
+    await hydrateLorFromChain(db, Number(id), { txHash: tx });
     insertAuditEvent(db, { kind: "product.lor.autolist", payload: JSON.stringify({ lorId: id, tx }) });
     return { ok: true, lorId: id, tx };
   });

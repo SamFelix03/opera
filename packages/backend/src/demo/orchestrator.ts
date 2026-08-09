@@ -508,6 +508,53 @@ export class DemoOrchestrator {
       maintMandateId: Number(nextMan) + 1,
     };
     updateDemoRun(this.db, runId, ids);
+    const { upsertLor, upsertMandate } = await import("../chain-index.js");
+    upsertLor(this.db, {
+      lorId: ids.energyLorId,
+      assetId: ids.assetId,
+      holder: energy.address,
+      scope: SCOPE_ENERGY,
+      price: "0",
+      autoListed: false,
+      active: true,
+      minScoreToHold: 80,
+    });
+    upsertLor(this.db, {
+      lorId: ids.maintLorId,
+      assetId: ids.assetId,
+      holder: maint.address,
+      scope: SCOPE_MAINT,
+      price: "0",
+      autoListed: false,
+      active: true,
+      minScoreToHold: 80,
+    });
+    upsertMandate(this.db, {
+      mandateId: ids.energyMandateId,
+      assetId: ids.assetId,
+      scope: SCOPE_ENERGY,
+      minScore: 80,
+      jurisdictionRoot: JURISDICTION_SG,
+      stakeAmount: stake.toString(),
+      maxSpendPerTx: maxSpend.toString(),
+      publisher: ctx.deployer.address,
+      winner: "0x0000000000000000000000000000000000000000",
+      open: true,
+      awarded: false,
+    });
+    upsertMandate(this.db, {
+      mandateId: ids.maintMandateId,
+      assetId: ids.assetId,
+      scope: SCOPE_MAINT,
+      minScore: 80,
+      jurisdictionRoot: JURISDICTION_SG,
+      stakeAmount: stake.toString(),
+      maxSpendPerTx: maxSpend.toString(),
+      publisher: ctx.deployer.address,
+      winner: "0x0000000000000000000000000000000000000000",
+      open: true,
+      awarded: false,
+    });
     this.log(runId, "setupAsset", "asset.ready", "LORs + mandates published", ids);
     return ids;
   }

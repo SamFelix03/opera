@@ -66,6 +66,10 @@ export const lorAbi = parseAbi([
   "function transferFeeBps(address holder) view returns (uint256)",
   "function lors(uint256) view returns (uint256 assetId, address holder, bytes32 scope, uint256 price, bool autoListed, bool active)",
   "function minScoreToHold(uint256) view returns (uint256)",
+  "event LORMinted(uint256 indexed lorId, uint256 assetId, address holder, bytes32 scope)",
+  "event LORTransferred(uint256 indexed lorId, address from, address to, uint256 fee)",
+  "event AutoListed(uint256 indexed lorId, uint256 price)",
+  "event Acquired(uint256 indexed lorId, address buyer, uint256 price)",
 ]);
 
 export const manAbi = parseAbi([
@@ -76,6 +80,9 @@ export const manAbi = parseAbi([
   "function principalOk(uint256 mandateId, address agent, uint256 spend) view returns (bool)",
   "function mandates(uint256) view returns (uint256 assetId, bytes32 scope, uint256 minScore, bytes32 jurisdictionRoot, uint256 stakeAmount, uint256 maxSpendPerTx, address publisher, address winner, bool open, bool awarded)",
   "function bids(uint256 mandateId, uint256 index) view returns (address bidder, uint256 stake, bool active)",
+  "event MandatePublished(uint256 indexed mandateId, uint256 assetId, uint256 stakeAmount)",
+  "event BidPosted(uint256 indexed mandateId, address bidder, uint256 stake)",
+  "event Awarded(uint256 indexed mandateId, address winner)",
 ]);
 
 export const revAbi = parseAbi([
