@@ -315,7 +315,9 @@ export function MarketPage() {
               <div style={{ marginTop: "0.85rem" }}>
                 <p className="muted" style={{ fontSize: "0.85rem" }}>
                   Cast acquire signs as {roleLabel(cast.selectedRole)}. Select{" "}
-                  <strong>Replacement operator</strong> in the cast bar.
+                  <strong>Replacement operator</strong> in the cast bar. If the
+                  holder was frozen, cast temporarily reactivates their A-Pass so
+                  oCVA settlement can clear.
                 </p>
                 <CastActionButton
                   action="acquire"
@@ -327,6 +329,11 @@ export function MarketPage() {
             ) : (
               <RequireWallet label="Connect wallet to acquire">
                 <>
+                  <p className="muted" style={{ fontSize: "0.85rem", margin: "0.85rem 0 0" }}>
+                    Payment goes to the current holder. If they were frozen after a
+                    sanctions event, activate their A-Pass (Rules) before Acquire or
+                    use cast mode.
+                  </p>
                   {buyerScore != null ? (
                     <div className="chip-row" style={{ margin: "0.85rem 0" }}>
                       <ScoreBadge score={Number(buyerScore)} label="Your score" />

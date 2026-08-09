@@ -557,7 +557,14 @@ export async function executeCastAct(
       functionName: "lors",
       args: [lorId],
     });
+    const seller = lor[1] as Hex;
     const price = lor[3] as bigint;
+    // oCVA transferFrom pays the current holder. Frozen/inactive A-Pass reverts
+    // APassNotActive(address) (0x322fde89) — temporarily activate seller to settle.
+    const cv = clientFromEnv();
+    const sellerApass = await queryApassStatus(cv, seller);
+    const sellerWasFrozen = sellerApass.status === 2;
+    await ensureApass(cv, ctx.publicClient, seller, "seller");
     const score = computeScore({
       ...demoInputs88(buyer.address, false),
       travelRuleCompleteTransfers: 5,
@@ -582,7 +589,18 @@ export async function executeCastAct(
     });
     await waitTx(ctx, acqHash);
     txs.push({ label: "acquireLOR", hash: acqHash });
-    ids = { lorId: lorId.toString(), price: price.toString(), buyer: buyer.address };
+    if (sellerWasFrozen) {
+      await freezeWallet(cv, seller, "Opera demo: re-freeze seller after acquire settlement").catch(
+        () => undefined,
+      );
+    }
+    ids = {
+      lorId: lorId.toString(),
+      price: price.toString(),
+      buyer: buyer.address,
+      seller,
+      sellerWasFrozen: String(sellerWasFrozen),
+    };
     await hydrateLorFromChain(db, Number(lorId), { txHash: acqHash });
     summary = `${buyerRole} acquired LOR #${lorId}`;
   } else if (action === "ensureApass") {

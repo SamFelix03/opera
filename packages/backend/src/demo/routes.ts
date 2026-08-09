@@ -15,6 +15,7 @@ import {
   getCastSnapshot,
 } from "./cast-actions.js";
 import { readFileSync, existsSync } from "node:fs";
+import { explainChainError } from "../lib/chain-errors.js";
 
 export async function registerDemoRoutes(
   app: FastifyInstance,
@@ -65,8 +66,9 @@ export async function registerDemoRoutes(
       const result = await executeCastAct(db, orch(), runId, body);
       return result;
     } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      return reply.code(500).send({ ok: false, error: msg, action: body.action });
+      return reply
+        .code(500)
+        .send({ ok: false, error: explainChainError(e), action: body.action });
     }
   });
 
@@ -88,8 +90,9 @@ export async function registerDemoRoutes(
       const result = await orch().runStep(runId, stepName as DemoStepName);
       return { ok: true, step: stepName, result };
     } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      return reply.code(500).send({ ok: false, step: stepName, error: msg });
+      return reply
+        .code(500)
+        .send({ ok: false, step: stepName, error: explainChainError(e) });
     }
   });
 
@@ -102,10 +105,9 @@ export async function registerDemoRoutes(
       const result = await orch().runAll(runId);
       return { ok: true, ...result, run: orch().getRun(runId) };
     } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
       return reply
         .code(500)
-        .send({ ok: false, error: msg, run: orch().getRun(runId) });
+        .send({ ok: false, error: explainChainError(e), run: orch().getRun(runId) });
     }
   });
 
